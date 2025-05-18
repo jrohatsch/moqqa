@@ -1,19 +1,24 @@
 package com.github.jrohatsch.moqqa;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class DataHandler {
     private final MqttConnector mqttConnector;
     private final ConcurrentHashMap<String, Message> data;
+    private final HashSet<String> monitoredTopics;
 
     public DataHandler(MqttConnector mqttConnector) {
         this.mqttConnector = mqttConnector;
         this.data = new ConcurrentHashMap<>();
+        this.monitoredTopics = new HashSet<>();
 
         mqttConnector.setMessageConsumer(message -> {
-            data.put(message.topic(), message);
+                data.put(message.topic(), message);
         });
     }
 
@@ -58,7 +63,16 @@ public class DataHandler {
             }
         }
 
-        output.sort(String::compareTo);
+        output.sort((a,b) -> {
+            try {
+                int aInt = Integer.parseInt(a.substring(0, a.indexOf(" ")));
+                int bInt = Integer.parseInt(b.substring(0, b.indexOf(" ")));
+                return bInt - aInt;
+            } catch (Exception e) {
+
+            }
+            return a.compareTo(b);
+        });
 
         return output;
     }
@@ -66,5 +80,28 @@ public class DataHandler {
     public void disconnect() {
         mqttConnector.disconnect();
         data.clear();
+    }
+
+    public void forgetMonitoredValues() {
+        monitoredTopics.clear();
+    }
+
+    public boolean addToMonitoredValues(String path, String item) {
+        path = path.endsWith("/") ? path : path + "/";
+        int index = item.indexOf(" ");
+        if(index != -1) {
+            item = item.substring(0, index);
+        }
+        String key = path + item;
+        if (data.containsKey(key)) {
+            monitoredTopics.add(key);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public List<Message> getMonitoredValues() {
+        return monitoredTopics.stream().map(topic -> data.get(topic)).collect(Collectors.toList());
     }
 }

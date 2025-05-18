@@ -49,7 +49,7 @@ public class MqttConnector implements MqttCallback {
     @Override
     public void messageArrived(String s, MqttMessage mqttMessage) {
         System.out.printf("got message on %s\n".formatted(s));
-        messageConsumer.accept(new Message(s, mqttMessage.toString(), Instant.now()));
+        messageConsumer.accept(Message.of(s, mqttMessage.toString()));
     }
 
     @Override

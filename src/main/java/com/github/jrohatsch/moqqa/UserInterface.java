@@ -3,10 +3,12 @@ package com.github.jrohatsch.moqqa;
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
+import java.util.List;
 
 public class UserInterface {
     private final DataHandler dataHandler;
@@ -16,6 +18,9 @@ public class UserInterface {
     private JButton connectButton;
     private JTextField mqttAddress;
     private JTextField searchPath;
+    private JButton monitorButton;
+    private JTable monitoredValues;
+    private DefaultTableModel monitoredValuesModel;
 
     public UserInterface(DataHandler dataHandler) {
         this.dataHandler = dataHandler;
@@ -43,25 +48,28 @@ public class UserInterface {
         gridConstraints.gridx = 1;
 
         mqttAddress = new JTextField(40);
+        mqttAddress.setText("localhost:1883");
         frame.add(mqttAddress, gridConstraints);
 
         gridConstraints.gridy = 0;
         gridConstraints.gridx = 2;
         connectButton = new JButton("Connect");
+
         frame.add(connectButton, gridConstraints);
+
         connectButton.addActionListener(action -> {
             if (connectButton.getText().equals("Connect")) {
                 boolean connected = dataHandler.connect(mqttAddress.getText());
                 if (connected) {
                     connectButton.setText("Disconnect");
                     mqttAddress.setEnabled(false);
-                    clearPathItems();
+                    clear();
                 }
             } else if (connectButton.getText().equals("Disconnect")) {
                 dataHandler.disconnect();
                 mqttAddress.setEnabled(true);
                 connectButton.setText("Connect");
-                clearPathItems();
+                clear();
             }
 
         });
@@ -97,6 +105,20 @@ public class UserInterface {
 
         gridConstraints.gridy = 2;
         gridConstraints.gridx = 0;
+        gridConstraints.gridwidth = 1;
+        monitorButton = new JButton("Monitor");
+        monitorButton.setEnabled(false);
+
+
+        monitorButton.addActionListener(action -> {
+            String path = searchPath.getText();
+            String item = pathItems.getSelectedValue();
+            dataHandler.addToMonitoredValues(path, item);
+        });
+        frame.add(monitorButton, gridConstraints);
+
+        gridConstraints.gridy = 3;
+        gridConstraints.gridx = 0;
         gridConstraints.gridwidth = 3;
         gridConstraints.gridheight = 3;
 
@@ -118,6 +140,7 @@ public class UserInterface {
                         }
                     }
                 }
+                System.out.println("mouse button clicked "+ evt.getButton());
             }
         });
 
@@ -125,11 +148,36 @@ public class UserInterface {
         scrollPane.setViewportView(pathItems);
         pathItems.setLayoutOrientation(JList.VERTICAL);
 
+        pathItems.addListSelectionListener(e -> {
+            if(hasValue(pathItems.getSelectedValue()) && !monitorButton.isEnabled()) {
+                monitorButton.setEnabled(true);
+            } else if(!hasValue(pathItems.getSelectedValue()) && monitorButton.isEnabled()) {
+                monitorButton.setEnabled(false);
+            }
+        });
+
         frame.add(scrollPane, gridConstraints);
+
+        monitoredValuesModel = new DefaultTableModel();
+        monitoredValues = new JTable(monitoredValuesModel);
+        monitoredValuesModel.addColumn("topic");
+        monitoredValuesModel.addColumn("value");
+
+        JScrollPane monitoredScrollPane = new JScrollPane();
+        monitoredScrollPane.setViewportView(monitoredValues);
+
+        gridConstraints.gridy = 6;
+        gridConstraints.gridx = 0;
+        gridConstraints.gridwidth = 3;
+        gridConstraints.gridheight = 1;
+        frame.add(monitoredScrollPane, gridConstraints);
+
 
         frame.setFocusable(false);
         frame.pack();
-        frame.setSize(800, 400);
+        frame.setSize(700, 720);
+        frame.setResizable(false);
+
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
@@ -137,8 +185,14 @@ public class UserInterface {
         frame.setVisible(true);
     }
 
-    public void clearPathItems() {
+    public void clear() {
         pathItemsModel.clear();
+        int rows = monitoredValuesModel.getRowCount();
+        for(int i=0; i< rows; ++i) {
+            monitoredValuesModel.removeRow(0);
+        }
+        dataHandler.forgetMonitoredValues();
+        searchPath.setText("");
     }
 
     public void updatePathItems(Collection<String> paths) {
@@ -159,6 +213,7 @@ public class UserInterface {
     public void loop() {
         while (true) {
             updatePathItems(dataHandler.getPathItems(searchPath.getText()));
+            updateMonitoredItems(dataHandler.getMonitoredValues());
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -166,5 +221,31 @@ public class UserInterface {
                 return;
             }
         }
+    }
+
+    private void updateMonitoredItems(List<Message> monitoredValues) {
+        for (Message message : monitoredValues) {
+            int rows = this.monitoredValuesModel.getRowCount();
+            int rowIndex = -1;
+            for(int i = 0; i < rows; ++i) {
+                String row = (String) this.monitoredValuesModel.getValueAt(i,0);
+                if (row.equals(message.topic())) {
+                    rowIndex = i;
+                }
+            }
+            if(rowIndex == -1) {
+                this.monitoredValuesModel.addRow(new String[]{message.topic(), message.message()});
+            } else {
+                // check if value changed
+                if (!this.monitoredValuesModel.getValueAt(rowIndex, 1).equals(message.message())) {
+                    this.monitoredValuesModel.setValueAt(message.message(), rowIndex, 1);
+                }
+            }
+        }
+    }
+
+    private boolean hasValue(String text) {
+        if (text == null) return false;
+        return text.contains(" = ");
     }
 }
