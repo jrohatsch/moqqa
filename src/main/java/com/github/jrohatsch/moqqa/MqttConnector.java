@@ -2,7 +2,6 @@ package com.github.jrohatsch.moqqa;
 
 import org.eclipse.paho.client.mqttv3.*;
 
-import java.time.Instant;
 import java.util.function.Consumer;
 
 
@@ -48,7 +47,6 @@ public class MqttConnector implements MqttCallback {
 
     @Override
     public void messageArrived(String s, MqttMessage mqttMessage) {
-        System.out.printf("got message on %s\n".formatted(s));
         messageConsumer.accept(Message.of(s, mqttMessage.toString()));
     }
 

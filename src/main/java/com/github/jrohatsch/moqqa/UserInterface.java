@@ -13,8 +13,8 @@ import java.util.List;
 public class UserInterface {
     private final DataHandler dataHandler;
     private JFrame frame;
-    private JList<String> pathItems;
-    private DefaultListModel<String> pathItemsModel;
+    private JList<PathListItem> pathItems;
+    private DefaultListModel<PathListItem> pathItemsModel;
     private JButton connectButton;
     private JTextField mqttAddress;
     private JTextField searchPath;
@@ -93,6 +93,7 @@ public class UserInterface {
                 } else {
                     searchPath.setText(path.substring(0, index + 1));
                 }
+                pathItemsModel.clear();
             }
         });
         frame.add(backButton, gridConstraints);
@@ -112,7 +113,7 @@ public class UserInterface {
 
         monitorButton.addActionListener(action -> {
             String path = searchPath.getText();
-            String item = pathItems.getSelectedValue();
+            String item = pathItems.getSelectedValue().toString();
             dataHandler.addToMonitoredValues(path, item);
         });
         frame.add(monitorButton, gridConstraints);
@@ -127,20 +128,17 @@ public class UserInterface {
         pathItems = new JList<>(pathItemsModel);
         pathItems.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
-                JList<String> list = (JList<String>) evt.getSource();
+                JList<PathListItem> list = (JList<PathListItem>) evt.getSource();
                 if (evt.getClickCount() == 2) {
-                    String selection = list.getSelectedValue();
-                    if (!selection.contains(" = ")) {
+                    PathListItem selection = list.getSelectedValue();
+                    if (selection.value().isEmpty()) {
                         list.clearSelection();
-                        var index = selection.indexOf(" ");
-                        if (index == -1) {
-                            searchPath.setText(searchPath.getText() + selection + "/");
-                        } else {
-                            searchPath.setText(searchPath.getText() + selection.substring(0, index) + "/");
-                        }
+
+                        searchPath.setText(searchPath.getText() + selection.topic() + "/");
+                        pathItemsModel.clear();
+
                     }
                 }
-                System.out.println("mouse button clicked "+ evt.getButton());
             }
         });
 
@@ -149,9 +147,10 @@ public class UserInterface {
         pathItems.setLayoutOrientation(JList.VERTICAL);
 
         pathItems.addListSelectionListener(e -> {
-            if(hasValue(pathItems.getSelectedValue()) && !monitorButton.isEnabled()) {
-                monitorButton.setEnabled(true);
-            } else if(!hasValue(pathItems.getSelectedValue()) && monitorButton.isEnabled()) {
+            var selectedItem = pathItems.getSelectedValue();
+            if (selectedItem != null) {
+                monitorButton.setEnabled(selectedItem.value().isPresent());
+            } else {
                 monitorButton.setEnabled(false);
             }
         });
@@ -188,26 +187,33 @@ public class UserInterface {
     public void clear() {
         pathItemsModel.clear();
         int rows = monitoredValuesModel.getRowCount();
-        for(int i=0; i< rows; ++i) {
+        for (int i = 0; i < rows; ++i) {
             monitoredValuesModel.removeRow(0);
         }
         dataHandler.forgetMonitoredValues();
         searchPath.setText("");
     }
 
-    public void updatePathItems(Collection<String> paths) {
-        for (var path : paths) {
-            if (!pathItemsModel.contains(path)) {
-                pathItemsModel.add(0, path);
+    public void updatePathItems(Collection<PathListItem> updatedPaths) {
+        for (PathListItem updatedPath : updatedPaths) {
+            int size = pathItemsModel.getSize();
+            boolean updatedPathFoundInCurrentPaths = false;
+            for (int i = 0; i < size; ++i) {
+                PathListItem eachPath = pathItemsModel.get(i);
+
+                if (eachPath.topic().equals(updatedPath.topic())) {
+                    updatedPathFoundInCurrentPaths = true;
+                    if (!eachPath.equals(updatedPath)) {
+                        // update value
+                        pathItemsModel.setElementAt(updatedPath, i);
+                    }
+                }
+            }
+            if (!updatedPathFoundInCurrentPaths) {
+                pathItemsModel.addElement(updatedPath);
             }
         }
-        var iterator = pathItemsModel.elements().asIterator();
-        while (iterator.hasNext()) {
-            var current = iterator.next();
-            if (!paths.contains(current)) {
-                pathItemsModel.removeElement(current);
-            }
-        }
+
     }
 
     public void loop() {
@@ -227,13 +233,13 @@ public class UserInterface {
         for (Message message : monitoredValues) {
             int rows = this.monitoredValuesModel.getRowCount();
             int rowIndex = -1;
-            for(int i = 0; i < rows; ++i) {
-                String row = (String) this.monitoredValuesModel.getValueAt(i,0);
+            for (int i = 0; i < rows; ++i) {
+                String row = (String) this.monitoredValuesModel.getValueAt(i, 0);
                 if (row.equals(message.topic())) {
                     rowIndex = i;
                 }
             }
-            if(rowIndex == -1) {
+            if (rowIndex == -1) {
                 this.monitoredValuesModel.addRow(new String[]{message.topic(), message.message()});
             } else {
                 // check if value changed
@@ -242,10 +248,5 @@ public class UserInterface {
                 }
             }
         }
-    }
-
-    private boolean hasValue(String text) {
-        if (text == null) return false;
-        return text.contains(" = ");
     }
 }

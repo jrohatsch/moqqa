@@ -1,24 +1,21 @@
 package com.github.jrohatsch.moqqa;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class DataHandler {
     private final MqttConnector mqttConnector;
     private final ConcurrentHashMap<String, Message> data;
-    private final HashSet<String> monitoredTopics;
+    private final Set<String> monitoredTopics;
 
     public DataHandler(MqttConnector mqttConnector) {
         this.mqttConnector = mqttConnector;
         this.data = new ConcurrentHashMap<>();
-        this.monitoredTopics = new HashSet<>();
+        this.monitoredTopics = ConcurrentHashMap.newKeySet();
 
         mqttConnector.setMessageConsumer(message -> {
-                data.put(message.topic(), message);
+            data.put(message.topic(), message);
         });
     }
 
@@ -26,8 +23,8 @@ public class DataHandler {
         return mqttConnector.connect(url);
     }
 
-    public List<String> getPathItems(String path) {
-        List<String> output = new ArrayList<>();
+    public Set<PathListItem> getPathItems(String path) {
+        List<PathListItem> output = new ArrayList<>();
 
         if (path == null || path.isBlank() || path.isEmpty()) {
             // return first level paths
@@ -35,10 +32,10 @@ public class DataHandler {
             for (var entry : entrySet) {
                 int index = entry.getKey().indexOf("/");
                 if (index == -1) {
-                    output.add(entry.getKey() + " = " + entry.getValue().message());
+                    output.add(new PathListItem(entry.getKey(), Optional.of(entry.getValue().message()), 0));
                 } else {
                     long children = data.keySet().stream().filter(topic -> topic.startsWith(entry.getKey().substring(0, index))).count();
-                    output.add(entry.getKey().substring(0, index) + " (%d sub topics)".formatted(children));
+                    output.add(new PathListItem(entry.getKey().substring(0, index), Optional.empty(), children));
                 }
             }
         } else {
@@ -53,28 +50,28 @@ public class DataHandler {
                     int index = pathItem.indexOf("/");
 
                     if (index == -1) {
-                        output.add(pathItem + " = " + entry.getValue().message());
+                        output.add(new PathListItem(pathItem, Optional.of(entry.getValue().message()), 0));
                     } else {
                         String finalPath = path;
                         long children = data.keySet().stream().filter(topic -> topic.startsWith(finalPath + pathItem.substring(0, index) + "/")).count();
-                        output.add(pathItem.substring(0, index) + " (%d sub topics)".formatted(children));
+                        output.add(new PathListItem(pathItem.substring(0, index), Optional.empty(), children));
                     }
                 }
             }
         }
 
-        output.sort((a,b) -> {
+        output.sort((a, b) -> {
             try {
-                int aInt = Integer.parseInt(a.substring(0, a.indexOf(" ")));
-                int bInt = Integer.parseInt(b.substring(0, b.indexOf(" ")));
+                int aInt = Integer.parseInt(a.topic());
+                int bInt = Integer.parseInt(b.topic());
                 return bInt - aInt;
             } catch (Exception e) {
 
             }
-            return a.compareTo(b);
+            return a.topic().compareTo(b.topic());
         });
 
-        return output;
+        return new HashSet<>(output);
     }
 
     public void disconnect() {
@@ -89,7 +86,7 @@ public class DataHandler {
     public boolean addToMonitoredValues(String path, String item) {
         path = path.endsWith("/") ? path : path + "/";
         int index = item.indexOf(" ");
-        if(index != -1) {
+        if (index != -1) {
             item = item.substring(0, index);
         }
         String key = path + item;
@@ -104,4 +101,5 @@ public class DataHandler {
     public List<Message> getMonitoredValues() {
         return monitoredTopics.stream().map(topic -> data.get(topic)).collect(Collectors.toList());
     }
+
 }
