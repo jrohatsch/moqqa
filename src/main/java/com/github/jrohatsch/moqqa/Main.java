@@ -9,6 +9,6 @@ class Main {
 
         userInterface.setup();
         userInterface.show();
-        userInterface.loop();
+        userInterface.start();
     }
 }

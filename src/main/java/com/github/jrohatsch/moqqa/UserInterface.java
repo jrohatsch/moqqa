@@ -1,14 +1,20 @@
 package com.github.jrohatsch.moqqa;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class UserInterface {
     private final DataHandler dataHandler;
@@ -21,6 +27,7 @@ public class UserInterface {
     private JButton monitorButton;
     private JTable monitoredValues;
     private DefaultTableModel monitoredValuesModel;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
 
     public UserInterface(DataHandler dataHandler) {
         this.dataHandler = dataHandler;
@@ -28,7 +35,7 @@ public class UserInterface {
     }
 
     public void setup() {
-        FlatDarkLaf.setup();
+        FlatLightLaf.setup();
         frame = new JFrame("Moqqa");
 
         GridBagLayout grid = new GridBagLayout();
@@ -216,17 +223,14 @@ public class UserInterface {
 
     }
 
-    public void loop() {
-        while (true) {
+    public void start() {
+        executorService.scheduleAtFixedRate(()->{
             updatePathItems(dataHandler.getPathItems(searchPath.getText()));
+        },1,1, TimeUnit.SECONDS);
+
+        executorService.scheduleAtFixedRate(()->{
             updateMonitoredItems(dataHandler.getMonitoredValues());
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
-            }
-        }
+        },10,10, TimeUnit.MILLISECONDS);
     }
 
     private void updateMonitoredItems(List<Message> monitoredValues) {
