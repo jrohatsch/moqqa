@@ -1,4 +1,4 @@
-package com.github.jrohatsch.moqqa;
+package com.github.jrohatsch.moqqa.domain;
 
 import java.time.Instant;
 

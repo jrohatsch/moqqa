@@ -1,4 +1,7 @@
-package com.github.jrohatsch.moqqa;
+package com.github.jrohatsch.moqqa.data;
+
+import com.github.jrohatsch.moqqa.domain.Message;
+import com.github.jrohatsch.moqqa.domain.PathListItem;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,9 +17,7 @@ public class DataHandler {
         this.data = new ConcurrentHashMap<>();
         this.monitoredTopics = ConcurrentHashMap.newKeySet();
 
-        mqttConnector.setMessageConsumer(message -> {
-            data.put(message.topic(), message);
-        });
+        mqttConnector.setMessageConsumer(message -> data.put(message.topic(), message));
     }
 
     public boolean connect(String url) {
@@ -24,6 +25,8 @@ public class DataHandler {
     }
 
     public Set<PathListItem> getPathItems(String path) {
+        // clone one time
+        var data = new ConcurrentHashMap<>(this.data);
         List<PathListItem> output = new ArrayList<>();
 
         if (path == null || path.isBlank() || path.isEmpty()) {
@@ -65,13 +68,14 @@ public class DataHandler {
                 int aInt = Integer.parseInt(a.topic());
                 int bInt = Integer.parseInt(b.topic());
                 return bInt - aInt;
-            } catch (Exception e) {
+            } catch (Exception ignored) {
 
             }
             return a.topic().compareTo(b.topic());
         });
 
-        return new HashSet<>(output);
+
+        return new HashSet<>(output.stream().limit(Long.MAX_VALUE).toList());
     }
 
     public void disconnect() {
@@ -83,7 +87,7 @@ public class DataHandler {
         monitoredTopics.clear();
     }
 
-    public boolean addToMonitoredValues(String path, String item) {
+    public void addToMonitoredValues(String path, String item) {
         path = path.endsWith("/") ? path : path + "/";
         int index = item.indexOf(" ");
         if (index != -1) {
@@ -92,14 +96,11 @@ public class DataHandler {
         String key = path + item;
         if (data.containsKey(key)) {
             monitoredTopics.add(key);
-            return true;
-        } else {
-            return false;
         }
     }
 
     public List<Message> getMonitoredValues() {
-        return monitoredTopics.stream().map(topic -> data.get(topic)).collect(Collectors.toList());
+        return monitoredTopics.stream().map(data::get).collect(Collectors.toList());
     }
 
 }

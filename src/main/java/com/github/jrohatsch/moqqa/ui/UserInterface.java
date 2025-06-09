@@ -1,17 +1,17 @@
-package com.github.jrohatsch.moqqa;
+package com.github.jrohatsch.moqqa.ui;
 
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import com.github.jrohatsch.moqqa.data.DataHandler;
+import com.github.jrohatsch.moqqa.domain.Message;
+import com.github.jrohatsch.moqqa.domain.PathListItem;
+import com.github.jrohatsch.moqqa.swingworkers.PathItemUpdater;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +21,7 @@ public class UserInterface {
     private JFrame frame;
     private JList<PathListItem> pathItems;
     private DefaultListModel<PathListItem> pathItemsModel;
+    private PathItemUpdater pathItemUpdater;
     private JButton connectButton;
     private JTextField mqttAddress;
     private JTextField searchPath;
@@ -31,7 +32,6 @@ public class UserInterface {
 
     public UserInterface(DataHandler dataHandler) {
         this.dataHandler = dataHandler;
-
     }
 
     public void setup() {
@@ -95,12 +95,14 @@ public class UserInterface {
             if (path.length() > 0) {
                 var index = path.lastIndexOf("/");
 
+                String newPath;
                 if (index == -1) {
-                    searchPath.setText("");
+                    newPath = "";
                 } else {
-                    searchPath.setText(path.substring(0, index + 1));
+                    newPath = path.substring(0, index + 1);
                 }
-                pathItemsModel.clear();
+                pathItemUpdater.updatePath(newPath);
+                searchPath.setText(newPath);
             }
         });
         frame.add(backButton, gridConstraints);
@@ -132,6 +134,8 @@ public class UserInterface {
 
         pathItemsModel = new DefaultListModel<>();
 
+        this.pathItemUpdater = new PathItemUpdater(pathItemsModel, dataHandler);
+
         pathItems = new JList<>(pathItemsModel);
         pathItems.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
@@ -140,10 +144,9 @@ public class UserInterface {
                     PathListItem selection = list.getSelectedValue();
                     if (selection.value().isEmpty()) {
                         list.clearSelection();
-
-                        searchPath.setText(searchPath.getText() + selection.topic() + "/");
-                        pathItemsModel.clear();
-
+                        String newPath = searchPath.getText() + selection.topic() + "/";
+                        pathItemUpdater.updatePath(newPath);
+                        searchPath.setText(newPath);
                     }
                 }
             }
@@ -192,7 +195,8 @@ public class UserInterface {
     }
 
     public void clear() {
-        pathItemsModel.clear();
+        System.out.println("clear paths");
+        pathItemUpdater.clear();
         int rows = monitoredValuesModel.getRowCount();
         for (int i = 0; i < rows; ++i) {
             monitoredValuesModel.removeRow(0);
@@ -201,32 +205,10 @@ public class UserInterface {
         searchPath.setText("");
     }
 
-    public void updatePathItems(Collection<PathListItem> updatedPaths) {
-        for (PathListItem updatedPath : updatedPaths) {
-            int size = pathItemsModel.getSize();
-            boolean updatedPathFoundInCurrentPaths = false;
-            for (int i = 0; i < size; ++i) {
-                PathListItem eachPath = pathItemsModel.get(i);
 
-                if (eachPath.topic().equals(updatedPath.topic())) {
-                    updatedPathFoundInCurrentPaths = true;
-                    if (!eachPath.equals(updatedPath)) {
-                        // update value
-                        pathItemsModel.setElementAt(updatedPath, i);
-                    }
-                }
-            }
-            if (!updatedPathFoundInCurrentPaths) {
-                pathItemsModel.addElement(updatedPath);
-            }
-        }
-
-    }
 
     public void start() {
-        executorService.scheduleAtFixedRate(()->{
-            updatePathItems(dataHandler.getPathItems(searchPath.getText()));
-        },1,1, TimeUnit.SECONDS);
+        pathItemUpdater.execute();
 
         executorService.scheduleAtFixedRate(()->{
             updateMonitoredItems(dataHandler.getMonitoredValues());

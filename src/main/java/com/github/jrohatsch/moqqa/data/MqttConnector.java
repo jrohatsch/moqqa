@@ -1,5 +1,6 @@
-package com.github.jrohatsch.moqqa;
+package com.github.jrohatsch.moqqa.data;
 
+import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.*;
 
 import java.util.function.Consumer;
