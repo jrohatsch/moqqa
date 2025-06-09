@@ -1,6 +1,6 @@
 package com.github.jrohatsch.moqqa.swingworkers;
 
-import com.github.jrohatsch.moqqa.data.DataHandler;
+import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 
 import javax.swing.*;
@@ -8,15 +8,19 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>, DefaultListModel<PathListItem>> {
-    private final DefaultListModel<PathListItem> pathItemsModel;
-    private final DataHandler dataHandler;
+    private DefaultListModel<PathListItem> pathItemsModel;
+    private final Datahandler dataHandler;
     private String currentPath = "";
     private final AtomicBoolean doUpdate;
 
-    public PathItemUpdater(DefaultListModel<PathListItem> pathItemsModel, DataHandler dataHandler) {
-        this.pathItemsModel = pathItemsModel;
+    public PathItemUpdater(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
         this.doUpdate = new AtomicBoolean(true);
+    }
+
+    public JList<PathListItem> init() {
+        this.pathItemsModel = new DefaultListModel<>();
+        return new JList<>(pathItemsModel);
     }
 
     public void updatePath(String path) {

@@ -1,5 +1,6 @@
-package com.github.jrohatsch.moqqa.data;
+package com.github.jrohatsch.moqqa.data.impl;
 
+import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 
@@ -7,12 +8,12 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class DataHandler {
+public class DatahandlerMqtt implements Datahandler {
     private final MqttConnector mqttConnector;
     private final ConcurrentHashMap<String, Message> data;
     private final Set<String> monitoredTopics;
 
-    public DataHandler(MqttConnector mqttConnector) {
+    public DatahandlerMqtt(MqttConnector mqttConnector) {
         this.mqttConnector = mqttConnector;
         this.data = new ConcurrentHashMap<>();
         this.monitoredTopics = ConcurrentHashMap.newKeySet();
@@ -20,10 +21,12 @@ public class DataHandler {
         mqttConnector.setMessageConsumer(message -> data.put(message.topic(), message));
     }
 
+    @Override
     public boolean connect(String url) {
         return mqttConnector.connect(url);
     }
 
+    @Override
     public Set<PathListItem> getPathItems(String path) {
         // clone one time
         var data = new ConcurrentHashMap<>(this.data);
@@ -78,15 +81,18 @@ public class DataHandler {
         return new HashSet<>(output.stream().limit(Long.MAX_VALUE).toList());
     }
 
+    @Override
     public void disconnect() {
         mqttConnector.disconnect();
         data.clear();
     }
 
+    @Override
     public void forgetMonitoredValues() {
         monitoredTopics.clear();
     }
 
+    @Override
     public void addToMonitoredValues(String path, String item) {
         path = path.endsWith("/") ? path : path + "/";
         int index = item.indexOf(" ");
@@ -99,6 +105,7 @@ public class DataHandler {
         }
     }
 
+    @Override
     public List<Message> getMonitoredValues() {
         return monitoredTopics.stream().map(data::get).collect(Collectors.toList());
     }

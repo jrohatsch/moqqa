@@ -1,0 +1,21 @@
+package com.github.jrohatsch.moqqa.data;
+
+import com.github.jrohatsch.moqqa.domain.Message;
+import com.github.jrohatsch.moqqa.domain.PathListItem;
+
+import java.util.Collection;
+import java.util.List;
+
+public interface Datahandler {
+    boolean connect(String url);
+
+    void disconnect();
+
+    void forgetMonitoredValues();
+
+    void addToMonitoredValues(String path, String item);
+
+    List<Message> getMonitoredValues();
+
+    Collection<PathListItem> getPathItems(String currentPath);
+}

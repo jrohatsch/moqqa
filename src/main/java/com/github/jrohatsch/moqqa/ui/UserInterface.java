@@ -1,7 +1,7 @@
 package com.github.jrohatsch.moqqa.ui;
 
 import com.formdev.flatlaf.FlatLightLaf;
-import com.github.jrohatsch.moqqa.data.DataHandler;
+import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.swingworkers.PathItemUpdater;
@@ -17,10 +17,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class UserInterface {
-    private final DataHandler dataHandler;
+    private final Datahandler dataHandler;
     private JFrame frame;
     private JList<PathListItem> pathItems;
-    private DefaultListModel<PathListItem> pathItemsModel;
     private PathItemUpdater pathItemUpdater;
     private JButton connectButton;
     private JTextField mqttAddress;
@@ -30,7 +29,7 @@ public class UserInterface {
     private DefaultTableModel monitoredValuesModel;
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
 
-    public UserInterface(DataHandler dataHandler) {
+    public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
     }
 
@@ -132,11 +131,9 @@ public class UserInterface {
         gridConstraints.gridwidth = 3;
         gridConstraints.gridheight = 3;
 
-        pathItemsModel = new DefaultListModel<>();
 
-        this.pathItemUpdater = new PathItemUpdater(pathItemsModel, dataHandler);
-
-        pathItems = new JList<>(pathItemsModel);
+        this.pathItemUpdater = new PathItemUpdater(dataHandler);
+        pathItems = this.pathItemUpdater.init();
         pathItems.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
                 JList<PathListItem> list = (JList<PathListItem>) evt.getSource();

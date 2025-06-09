@@ -1,4 +1,4 @@
-package com.github.jrohatsch.moqqa.data;
+package com.github.jrohatsch.moqqa.data.impl;
 
 import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.*;
