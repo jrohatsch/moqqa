@@ -5,20 +5,36 @@ import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class DatahandlerMqtt implements Datahandler {
     private final MqttConnector mqttConnector;
     private final ConcurrentHashMap<String, Message> data;
     private final Set<String> monitoredTopics;
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<>();
 
     public DatahandlerMqtt(MqttConnector mqttConnector) {
         this.mqttConnector = mqttConnector;
         this.data = new ConcurrentHashMap<>();
         this.monitoredTopics = ConcurrentHashMap.newKeySet();
 
-        mqttConnector.setMessageConsumer(message -> data.put(message.topic(), message));
+        // for each new message create a new thread to quickly save message in queue
+        mqttConnector.setMessageConsumer(message -> {
+            executorService.submit(()->queue.add(message));
+        });
+
+        // have one dedicated thread to read queue and insert to data map
+        executorService.submit(() -> {
+            while (true) {
+                var message = queue.poll();
+                if (message != null) {
+                    data.put(message.topic(), message);
+                }
+            }
+        });
+
     }
 
     @Override
