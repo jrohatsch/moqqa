@@ -32,7 +32,7 @@ public class DataHandlerTests {
     @Test
     public void test_that_first_level_values_are_in_path() {
         mqttConnector.mockMessage("lvl1", "value");
-        wait(Duration.ofSeconds(1));
+        wait(Duration.ofMillis(10));
         var paths = datahandler.getPathItems("");
         var expected = new PathListItem("lvl1", Optional.of("value"), 0);
         assertTrue(paths.contains(expected));
@@ -42,7 +42,7 @@ public class DataHandlerTests {
     public void test_that_second_level_values_show_parent() {
         mqttConnector.mockMessage("parent/childA", "value");
         mqttConnector.mockMessage("parent/childB", "value");
-        wait(Duration.ofSeconds(1));
+        wait(Duration.ofMillis(10));
         var paths = datahandler.getPathItems("");
         var expected = new PathListItem("parent", Optional.empty(), 2);
         assertTrue(paths.contains(expected));
