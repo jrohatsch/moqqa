@@ -1,18 +1,25 @@
 package com.github.jrohatsch.moqqa.data.impl;
 
+import com.github.jrohatsch.moqqa.data.MqttConnector;
 import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.*;
 
 import java.util.function.Consumer;
 
 
-public class MqttConnector implements MqttCallback {
-    private MqttAsyncClient client;
+public class MqttConnectorImpl implements MqttConnector, MqttCallback {
+    private IMqttAsyncClient client;
     private Consumer<Message> messageConsumer;
 
+    @Override
+    public IMqttAsyncClient getClient(String url) throws MqttException {
+        return new MqttAsyncClient("tcp://" + url, "Moqqa");
+    }
+
+    @Override
     public boolean connect(String url) {
         try {
-            client = new MqttAsyncClient("tcp://" + url, "Moqqa");
+            client = getClient(url);
         } catch (MqttException e) {
             return false;
         }
@@ -56,10 +63,12 @@ public class MqttConnector implements MqttCallback {
 
     }
 
+    @Override
     public void setMessageConsumer(Consumer<Message> consumer) {
         this.messageConsumer = consumer;
     }
 
+    @Override
     public void disconnect() {
         try {
             client.disconnect();

@@ -1,28 +1,32 @@
 package com.github.jrohatsch.moqqa.data.impl;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
+import com.github.jrohatsch.moqqa.data.MqttConnector;
 import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class DatahandlerMqtt implements Datahandler {
+public class DatahandlerImpl implements Datahandler {
     private final MqttConnector mqttConnector;
     private final ConcurrentHashMap<String, Message> data;
     private final Set<String> monitoredTopics;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
-    private ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<>();
 
-    public DatahandlerMqtt(MqttConnector mqttConnector) {
+    public DatahandlerImpl(MqttConnector mqttConnector) {
         this.mqttConnector = mqttConnector;
         this.data = new ConcurrentHashMap<>();
         this.monitoredTopics = ConcurrentHashMap.newKeySet();
 
         // for each new message create a new thread to quickly save message in queue
         mqttConnector.setMessageConsumer(message -> {
-            executorService.submit(()->queue.add(message));
+            executorService.submit(() -> queue.add(message));
         });
 
         // have one dedicated thread to read queue and insert to data map
@@ -42,45 +46,45 @@ public class DatahandlerMqtt implements Datahandler {
         return mqttConnector.connect(url);
     }
 
+
     @Override
     public Set<PathListItem> getPathItems(String path) {
         // clone one time
         var data = new ConcurrentHashMap<>(this.data);
         List<PathListItem> output = new ArrayList<>();
+        final String pathWithSeparator;
 
         if (path == null || path.isBlank() || path.isEmpty()) {
-            // return first level paths
-            var entrySet = data.entrySet();
-            for (var entry : entrySet) {
-                int index = entry.getKey().indexOf("/");
-                if (index == -1) {
-                    output.add(new PathListItem(entry.getKey(), Optional.of(entry.getValue().message()), 0));
-                } else {
-                    long children = data.keySet().stream().filter(topic -> topic.startsWith(entry.getKey().substring(0, index))).count();
-                    output.add(new PathListItem(entry.getKey().substring(0, index), Optional.empty(), children));
-                }
-            }
+            pathWithSeparator = "";
+        } else if (path.endsWith("/")) {
+            pathWithSeparator = path;
         } else {
-            path = path.endsWith("/") ? path : path + "/";
-
-            for (var entry : data.entrySet()) {
-                if (entry.getKey().startsWith(path)) {
-                    // remove the path
-                    String pathItem = entry.getKey().replace(path, "");
-
-                    // ignore everything from next sub topics
-                    int index = pathItem.indexOf("/");
-
-                    if (index == -1) {
-                        output.add(new PathListItem(pathItem, Optional.of(entry.getValue().message()), 0));
-                    } else {
-                        String finalPath = path;
-                        long children = data.keySet().stream().filter(topic -> topic.startsWith(finalPath + pathItem.substring(0, index) + "/")).count();
-                        output.add(new PathListItem(pathItem.substring(0, index), Optional.empty(), children));
-                    }
-                }
-            }
+            pathWithSeparator = path + "/";
         }
+
+        Map<String, Long> messagesPerTopic = data.keySet().stream()
+                .filter(topic -> topic.startsWith(pathWithSeparator))
+                .collect(Collectors.groupingBy(topic -> {
+                    topic = topic.replace(pathWithSeparator, "");
+                    int separatorIndex = topic.indexOf("/");
+
+                    if (separatorIndex == -1) {
+                        return topic;
+                    } else {
+                        return topic.substring(0, separatorIndex);
+                    }
+                }, Collectors.counting()));
+
+        messagesPerTopic.entrySet().stream().forEach(entry -> {
+            if (!data.containsKey(pathWithSeparator + entry.getKey())) {
+                // this is a parent topic
+                output.add(new PathListItem(entry.getKey(), Optional.empty(), entry.getValue()));
+            } else {
+                // this is a real value, remove everything after /
+                output.add(new PathListItem(entry.getKey(), Optional.of(data.get(pathWithSeparator + entry.getKey()).message()), 0));
+            }
+        });
+
 
         output.sort((a, b) -> {
             try {
@@ -92,7 +96,6 @@ public class DatahandlerMqtt implements Datahandler {
             }
             return a.topic().compareTo(b.topic());
         });
-
 
         return new HashSet<>(output.stream().limit(Long.MAX_VALUE).toList());
     }

@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class UserInterface {
     private final Datahandler dataHandler;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
     private JFrame frame;
     private JList<PathListItem> pathItems;
     private PathItemUpdater pathItemUpdater;
@@ -27,7 +28,6 @@ public class UserInterface {
     private JButton monitorButton;
     private JTable monitoredValues;
     private DefaultTableModel monitoredValuesModel;
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
 
     public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
@@ -203,13 +203,12 @@ public class UserInterface {
     }
 
 
-
     public void start() {
         pathItemUpdater.execute();
 
-        executorService.scheduleAtFixedRate(()->{
+        executorService.scheduleAtFixedRate(() -> {
             updateMonitoredItems(dataHandler.getMonitoredValues());
-        },10,10, TimeUnit.MILLISECONDS);
+        }, 10, 10, TimeUnit.MILLISECONDS);
     }
 
     private void updateMonitoredItems(List<Message> monitoredValues) {

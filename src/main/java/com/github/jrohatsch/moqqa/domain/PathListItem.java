@@ -10,7 +10,7 @@ public record PathListItem(String topic, Optional<String> value, long childTopic
                 return topic.concat(" (%d child topics)".formatted(childTopics));
             } else if (childTopics == 1) {
                 return topic.concat(" (1 child topic)");
-            }else {
+            } else {
                 return topic;
             }
         } else {

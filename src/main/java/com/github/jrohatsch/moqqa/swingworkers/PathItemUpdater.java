@@ -8,14 +8,14 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>, DefaultListModel<PathListItem>> {
-    private DefaultListModel<PathListItem> pathItemsModel;
     private final Datahandler dataHandler;
-    private String currentPath = "";
     private final AtomicBoolean doUpdate;
+    private DefaultListModel<PathListItem> pathItemsModel;
+    private String currentPath = "";
 
     public PathItemUpdater(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
-        this.doUpdate = new AtomicBoolean(true);
+        this.doUpdate = new AtomicBoolean(false);
     }
 
     public JList<PathListItem> init() {
@@ -29,7 +29,7 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
-           Thread.currentThread().interrupt();
+            Thread.currentThread().interrupt();
         }
         clear();
     }
@@ -61,7 +61,7 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
             if (!doUpdate.get()) {
                 continue;
             }
-            Thread.sleep(1);
+            Thread.sleep(100);
             Collection<PathListItem> updated = dataHandler.getPathItems(this.currentPath);
             updatePathItems(updated);
         }
