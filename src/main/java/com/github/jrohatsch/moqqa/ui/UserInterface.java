@@ -5,6 +5,7 @@ import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.swingworkers.PathItemUpdater;
+import com.github.jrohatsch.moqqa.swingworkers.SearchPathUpdater;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -24,10 +25,11 @@ public class UserInterface {
     private PathItemUpdater pathItemUpdater;
     private JButton connectButton;
     private JTextField mqttAddress;
-    private JTextField searchPath;
     private JButton monitorButton;
     private JTable monitoredValues;
     private DefaultTableModel monitoredValuesModel;
+
+    private SearchPathUpdater searchPathUpdater;
 
     public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
@@ -45,7 +47,7 @@ public class UserInterface {
         gridConstraints.insets = new Insets(5, 5, 5, 5);
         gridConstraints.fill = GridBagConstraints.HORIZONTAL;
 
-        // Row 1: Enter Number 1
+        // Row 1
         gridConstraints.gridy = 0;
         gridConstraints.gridx = 0;
         frame.add(new JLabel("Mqtt Address:"), gridConstraints);
@@ -60,57 +62,28 @@ public class UserInterface {
         gridConstraints.gridy = 0;
         gridConstraints.gridx = 2;
         connectButton = new JButton("Connect");
+        connectButton.setBackground(Colors.SUCCESS);
+        connectButton.setBorderPainted(false);
+        connectButton.setForeground(Color.WHITE);
 
         frame.add(connectButton, gridConstraints);
 
         connectButton.addActionListener(action -> {
-            if (connectButton.getText().equals("Connect")) {
+            if (connectButton.getBackground().equals(Colors.SUCCESS)) {
                 boolean connected = dataHandler.connect(mqttAddress.getText());
                 if (connected) {
-                    connectButton.setText("Disconnect");
+                    connectButton.setBackground(Colors.DANGER);
                     mqttAddress.setEnabled(false);
                     clear();
                 }
-            } else if (connectButton.getText().equals("Disconnect")) {
+            } else if (connectButton.getBackground().equals(Colors.DANGER)) {
                 dataHandler.disconnect();
                 mqttAddress.setEnabled(true);
-                connectButton.setText("Connect");
                 clear();
+                connectButton.setBackground(Colors.SUCCESS);
             }
 
         });
-
-        // Row 2:
-        gridConstraints.gridy = 1;
-        gridConstraints.gridx = 0;
-
-        var backButton = new JButton("Back");
-        backButton.addActionListener(action -> {
-            String path = searchPath.getText();
-            // remove / if it is at the end
-            if (path.endsWith("/") && path.length() > 1) {
-                path = path.substring(0, path.length() - 1);
-            }
-            if (path.length() > 0) {
-                var index = path.lastIndexOf("/");
-
-                String newPath;
-                if (index == -1) {
-                    newPath = "";
-                } else {
-                    newPath = path.substring(0, index + 1);
-                }
-                pathItemUpdater.updatePath(newPath);
-                searchPath.setText(newPath);
-            }
-        });
-        frame.add(backButton, gridConstraints);
-
-        gridConstraints.gridy = 1;
-        gridConstraints.gridx = 1;
-        gridConstraints.gridwidth = 2;
-        searchPath = new JTextField(27);
-        frame.add(searchPath, gridConstraints);
 
         gridConstraints.gridy = 2;
         gridConstraints.gridx = 0;
@@ -120,18 +93,14 @@ public class UserInterface {
 
 
         monitorButton.addActionListener(action -> {
-            String path = searchPath.getText();
+            String path = searchPathUpdater.getPath();
             String item = pathItems.getSelectedValue().toString();
             dataHandler.addToMonitoredValues(path, item);
         });
         frame.add(monitorButton, gridConstraints);
 
-        gridConstraints.gridy = 3;
-        gridConstraints.gridx = 0;
-        gridConstraints.gridwidth = 3;
-        gridConstraints.gridheight = 3;
 
-
+        // split pane
         this.pathItemUpdater = new PathItemUpdater(dataHandler);
         pathItems = this.pathItemUpdater.init();
         pathItems.addMouseListener(new MouseAdapter() {
@@ -140,17 +109,16 @@ public class UserInterface {
                 if (evt.getClickCount() == 2) {
                     PathListItem selection = list.getSelectedValue();
                     if (selection.value().isEmpty()) {
+                        searchPathUpdater.add(selection.topic());
                         list.clearSelection();
-                        String newPath = searchPath.getText() + selection.topic() + "/";
-                        pathItemUpdater.updatePath(newPath);
-                        searchPath.setText(newPath);
+                        pathItemUpdater.updatePath(searchPathUpdater.getPath());
                     }
                 }
             }
         });
 
-        var scrollPane = new JScrollPane();
-        scrollPane.setViewportView(pathItems);
+        var pathItemsPane = new JScrollPane();
+        pathItemsPane.setViewportView(pathItems);
         pathItems.setLayoutOrientation(JList.VERTICAL);
 
         pathItems.addListSelectionListener(e -> {
@@ -162,27 +130,43 @@ public class UserInterface {
             }
         });
 
-        frame.add(scrollPane, gridConstraints);
 
         monitoredValuesModel = new DefaultTableModel();
         monitoredValues = new JTable(monitoredValuesModel);
         monitoredValuesModel.addColumn("topic");
         monitoredValuesModel.addColumn("value");
 
-        JScrollPane monitoredScrollPane = new JScrollPane();
-        monitoredScrollPane.setViewportView(monitoredValues);
+        JScrollPane monitoredItemsPane = new JScrollPane();
+        monitoredItemsPane.setViewportView(monitoredValues);
 
-        gridConstraints.gridy = 6;
+
+        var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, pathItemsPane, monitoredItemsPane);
+
+
+        // path items and monitored values
+        gridConstraints.gridy = 3;
         gridConstraints.gridx = 0;
         gridConstraints.gridwidth = 3;
-        gridConstraints.gridheight = 1;
-        frame.add(monitoredScrollPane, gridConstraints);
+        gridConstraints.gridheight = 3;
+        frame.add(splitPane, gridConstraints);
 
 
         frame.setFocusable(false);
-        frame.pack();
+        //frame.pack();
         frame.setSize(700, 720);
-        frame.setResizable(false);
+        //frame.setResizable(false);
+
+
+        // test toolbar
+        searchPathUpdater = new SearchPathUpdater(newPath -> pathItemUpdater.updatePath(newPath));
+
+        var toolbar = searchPathUpdater.getToolbar();
+
+        gridConstraints.gridy = 1;
+        gridConstraints.gridx = 0;
+        gridConstraints.gridwidth = 3;
+        gridConstraints.gridheight = 1;
+        frame.add(toolbar, gridConstraints);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
@@ -199,7 +183,7 @@ public class UserInterface {
             monitoredValuesModel.removeRow(0);
         }
         dataHandler.forgetMonitoredValues();
-        searchPath.setText("");
+        searchPathUpdater.clear();
     }
 
 

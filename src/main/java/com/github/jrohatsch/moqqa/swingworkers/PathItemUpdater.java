@@ -2,6 +2,7 @@ package com.github.jrohatsch.moqqa.swingworkers;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
+import com.github.jrohatsch.moqqa.ui.Colors;
 
 import javax.swing.*;
 import java.util.Collection;
@@ -20,7 +21,9 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
 
     public JList<PathListItem> init() {
         this.pathItemsModel = new DefaultListModel<>();
-        return new JList<>(pathItemsModel);
+        var out = new JList<>(pathItemsModel);
+        out.setSelectionBackground(Colors.SUCCESS);
+        return out;
     }
 
     public void updatePath(String path) {

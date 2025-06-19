@@ -25,7 +25,7 @@ public class StressTestMqtt {
                     try {
                         int number = new Random().nextInt(0, 100);
                         String message = String.valueOf(number);
-                        stresstest.client.publish("root/hii" + finalI, message.getBytes(), 0, false);
+                        stresstest.client.publish("root/hii/more/child" + finalI, message.getBytes(), 0, false);
                     } catch (MqttException e) {
                         throw new RuntimeException(e);
                     }
