@@ -18,4 +18,14 @@ public interface Datahandler {
     List<Message> getMonitoredValues();
 
     Collection<PathListItem> getPathItems(String currentPath);
+
+    void monitorSelection();
+
+    void setSearchPath(String path);
+
+    void registerPathObserver(PathObserver observer);
+
+    void setSelectedItem(String topic);
+
+    void forgetMonitoredValue(String topic);
 }

@@ -1,2 +1,4 @@
 target/
 .idea/
+*/.lck
+dependency-reduced-pom.xml

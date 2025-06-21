@@ -1,23 +1,20 @@
-package com.github.jrohatsch.moqqa.swingworkers;
+package com.github.jrohatsch.moqqa.components;
+
+import com.github.jrohatsch.moqqa.data.Datahandler;
+import com.github.jrohatsch.moqqa.ui.SearchPathButton;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.function.Consumer;
+import java.util.ResourceBundle;
 
-public class SearchPathUpdater extends SwingWorker {
-    private JToolBar path;
+public class SearchPathUpdater {
+    private final Datahandler datahandler;
+    private final JToolBar path;
 
-    private final Consumer<String> callbackPathChange;
-
-    public SearchPathUpdater(Consumer<String> callbackPathChange){
+    public SearchPathUpdater(Datahandler datahandler) {
         path = new JToolBar();
+        this.datahandler = datahandler;
         add(">");
-        this.callbackPathChange = callbackPathChange;
-    }
-
-    @Override
-    protected Object doInBackground() throws Exception {
-        return null;
     }
 
     public String getPath() {
@@ -33,8 +30,8 @@ public class SearchPathUpdater extends SwingWorker {
                 continue;
             }
             try {
-                JButton button = (JButton) component;
-                buffer = buffer.concat(button.getText());
+                SearchPathButton button = (SearchPathButton) component;
+                buffer = buffer.concat(button.getPath());
                 buffer = buffer.concat("/");
             } catch (ClassCastException ignored) {
 
@@ -48,21 +45,29 @@ public class SearchPathUpdater extends SwingWorker {
     private void stepToIndex(int index) {
         Component[] components = path.getComponents();
         path.removeAll();
-        for(int i=0; i<=index; ++i) {
+        for (int i = 0; i <= index; ++i) {
             path.add(components[i]);
         }
         path.updateUI();
-        callbackPathChange.accept(getPath());
+        datahandler.setSearchPath(getPath());
     }
 
     public void add(String subPath) {
+        add(subPath, null);
+    }
+
+    public void add(String subPath, String tooltipText) {
         if (path.getComponentCount() > 1) {
             path.addSeparator();
         }
-        var button = new JButton(subPath);
+        var button = new SearchPathButton(subPath);
+
+        if (tooltipText != null) {
+            button.setToolTipText(tooltipText);
+        }
+
         final int index = path.getComponentCount();
         button.addActionListener(action -> {
-            System.out.println("element "+ index + " was clicked");
             stepToIndex(index);
         });
         path.add(button);
@@ -75,7 +80,7 @@ public class SearchPathUpdater extends SwingWorker {
 
     public void clear() {
         path.removeAll();
-        add(">");
+        add(">", ResourceBundle.getBundle("tooltips").getString("path.root"));
         path.updateUI();
     }
 }

@@ -1,35 +1,27 @@
 package com.github.jrohatsch.moqqa.ui;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import com.github.jrohatsch.moqqa.components.MonitoredValuesUpdater;
+import com.github.jrohatsch.moqqa.components.PathItemUpdater;
+import com.github.jrohatsch.moqqa.components.SearchPathUpdater;
 import com.github.jrohatsch.moqqa.data.Datahandler;
-import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
-import com.github.jrohatsch.moqqa.swingworkers.PathItemUpdater;
-import com.github.jrohatsch.moqqa.swingworkers.SearchPathUpdater;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class UserInterface {
     private final Datahandler dataHandler;
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
     private JFrame frame;
     private JList<PathListItem> pathItems;
     private PathItemUpdater pathItemUpdater;
     private JButton connectButton;
     private JTextField mqttAddress;
-    private JButton monitorButton;
-    private JTable monitoredValues;
-    private DefaultTableModel monitoredValuesModel;
 
     private SearchPathUpdater searchPathUpdater;
+    private MonitoredValuesUpdater monitoredValuesUpdater;
 
     public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
@@ -37,6 +29,7 @@ public class UserInterface {
 
     public void setup() {
         FlatLightLaf.setup();
+        ToolTipManager.sharedInstance().setInitialDelay(1500);
         frame = new JFrame("Moqqa");
 
         GridBagLayout grid = new GridBagLayout();
@@ -74,7 +67,7 @@ public class UserInterface {
                 if (connected) {
                     connectButton.setBackground(Colors.DANGER);
                     mqttAddress.setEnabled(false);
-                    clear();
+                    pathItemUpdater.start();
                 }
             } else if (connectButton.getBackground().equals(Colors.DANGER)) {
                 dataHandler.disconnect();
@@ -84,20 +77,6 @@ public class UserInterface {
             }
 
         });
-
-        gridConstraints.gridy = 2;
-        gridConstraints.gridx = 0;
-        gridConstraints.gridwidth = 1;
-        monitorButton = new JButton("Monitor");
-        monitorButton.setEnabled(false);
-
-
-        monitorButton.addActionListener(action -> {
-            String path = searchPathUpdater.getPath();
-            String item = pathItems.getSelectedValue().toString();
-            dataHandler.addToMonitoredValues(path, item);
-        });
-        frame.add(monitorButton, gridConstraints);
 
 
         // split pane
@@ -111,11 +90,13 @@ public class UserInterface {
                     if (selection.value().isEmpty()) {
                         searchPathUpdater.add(selection.topic());
                         list.clearSelection();
-                        pathItemUpdater.updatePath(searchPathUpdater.getPath());
+                        dataHandler.setSearchPath(searchPathUpdater.getPath());
                     }
                 }
             }
         });
+
+        dataHandler.registerPathObserver(pathItemUpdater);
 
         var pathItemsPane = new JScrollPane();
         pathItemsPane.setViewportView(pathItems);
@@ -124,24 +105,22 @@ public class UserInterface {
         pathItems.addListSelectionListener(e -> {
             var selectedItem = pathItems.getSelectedValue();
             if (selectedItem != null) {
-                monitorButton.setEnabled(selectedItem.value().isPresent());
-            } else {
-                monitorButton.setEnabled(false);
+                dataHandler.setSelectedItem(selectedItem.topic());
             }
         });
 
 
-        monitoredValuesModel = new DefaultTableModel();
-        monitoredValues = new JTable(monitoredValuesModel);
-        monitoredValuesModel.addColumn("topic");
-        monitoredValuesModel.addColumn("value");
+        JTabbedPane tabbedPane = new JTabbedPane();
 
-        JScrollPane monitoredItemsPane = new JScrollPane();
-        monitoredItemsPane.setViewportView(monitoredValues);
+        monitoredValuesUpdater = new MonitoredValuesUpdater(dataHandler);
+        JPanel monitorFrame = monitoredValuesUpdater.init();
 
 
-        var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, pathItemsPane, monitoredItemsPane);
+        tabbedPane.add("Monitor", monitorFrame);
+        tabbedPane.add("History", new JPanel());
+        tabbedPane.add("Publish", new JPanel());
 
+        var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, pathItemsPane, tabbedPane);
 
         // path items and monitored values
         gridConstraints.gridy = 3;
@@ -152,13 +131,11 @@ public class UserInterface {
 
 
         frame.setFocusable(false);
-        //frame.pack();
-        frame.setSize(700, 720);
-        //frame.setResizable(false);
-
+        frame.setSize(700, 760);
+        frame.setMinimumSize(new Dimension(700, 760));
 
         // test toolbar
-        searchPathUpdater = new SearchPathUpdater(newPath -> pathItemUpdater.updatePath(newPath));
+        searchPathUpdater = new SearchPathUpdater(dataHandler);
 
         var toolbar = searchPathUpdater.getToolbar();
 
@@ -166,7 +143,10 @@ public class UserInterface {
         gridConstraints.gridx = 0;
         gridConstraints.gridwidth = 3;
         gridConstraints.gridheight = 1;
-        frame.add(toolbar, gridConstraints);
+        var searchPathScroll = new JScrollPane();
+        searchPathScroll.setViewportView(toolbar);
+
+        frame.add(searchPathScroll, gridConstraints);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
@@ -176,43 +156,14 @@ public class UserInterface {
     }
 
     public void clear() {
-        System.out.println("clear paths");
-        pathItemUpdater.clear();
-        int rows = monitoredValuesModel.getRowCount();
-        for (int i = 0; i < rows; ++i) {
-            monitoredValuesModel.removeRow(0);
-        }
-        dataHandler.forgetMonitoredValues();
+        pathItemUpdater.reset();
         searchPathUpdater.clear();
+        monitoredValuesUpdater.clear();
     }
 
 
     public void start() {
         pathItemUpdater.execute();
-
-        executorService.scheduleAtFixedRate(() -> {
-            updateMonitoredItems(dataHandler.getMonitoredValues());
-        }, 10, 10, TimeUnit.MILLISECONDS);
-    }
-
-    private void updateMonitoredItems(List<Message> monitoredValues) {
-        for (Message message : monitoredValues) {
-            int rows = this.monitoredValuesModel.getRowCount();
-            int rowIndex = -1;
-            for (int i = 0; i < rows; ++i) {
-                String row = (String) this.monitoredValuesModel.getValueAt(i, 0);
-                if (row.equals(message.topic())) {
-                    rowIndex = i;
-                }
-            }
-            if (rowIndex == -1) {
-                this.monitoredValuesModel.addRow(new String[]{message.topic(), message.message()});
-            } else {
-                // check if value changed
-                if (!this.monitoredValuesModel.getValueAt(rowIndex, 1).equals(message.message())) {
-                    this.monitoredValuesModel.setValueAt(message.message(), rowIndex, 1);
-                }
-            }
-        }
+        monitoredValuesUpdater.execute();
     }
 }

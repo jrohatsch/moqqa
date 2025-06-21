@@ -2,6 +2,7 @@ package com.github.jrohatsch.moqqa.data.impl;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.MqttConnector;
+import com.github.jrohatsch.moqqa.data.PathObserver;
 import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 
@@ -19,17 +20,19 @@ public class DatahandlerImpl implements Datahandler {
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<>();
 
+    private final List<PathObserver> pathObservers = new ArrayList<>();
+    private String searchPath = "";
+    private String selectedItem = "";
+
     public DatahandlerImpl(MqttConnector mqttConnector) {
         this.mqttConnector = mqttConnector;
         this.data = new ConcurrentHashMap<>();
         this.monitoredTopics = ConcurrentHashMap.newKeySet();
 
-        // for each new message create a new thread to quickly save message in queue
-        mqttConnector.setMessageConsumer(message -> {
-            executorService.submit(() -> queue.add(message));
-        });
+        // for each new message create a new thread to quickly save message in the queue
+        mqttConnector.setMessageConsumer(message -> executorService.submit(() -> queue.add(message)));
 
-        // have one dedicated thread to read queue and insert to data map
+        // have one dedicated thread to read the queue and insert to data map
         executorService.submit(() -> {
             while (true) {
                 var message = queue.poll();
@@ -39,6 +42,36 @@ public class DatahandlerImpl implements Datahandler {
             }
         });
 
+    }
+
+    public String getSearchPath() {
+        return searchPath;
+    }
+
+    public void setSearchPath(String searchPath) {
+        System.out.println("set search path to " + searchPath);
+
+        this.searchPath = searchPath;
+        pathObservers.forEach(observer -> observer.updatePath(getSearchPath()));
+    }
+
+    @Override
+    public void registerPathObserver(PathObserver observer) {
+        pathObservers.add(observer);
+    }
+
+    public String getSelectedItem() {
+        return selectedItem;
+    }
+
+    public void setSelectedItem(String selectedItem) {
+        System.out.println("set selected item to " + selectedItem);
+        this.selectedItem = selectedItem;
+    }
+
+    @Override
+    public void forgetMonitoredValue(String topic) {
+        monitoredTopics.remove(topic);
     }
 
     @Override
@@ -75,13 +108,13 @@ public class DatahandlerImpl implements Datahandler {
                     }
                 }, Collectors.counting()));
 
-        messagesPerTopic.entrySet().stream().forEach(entry -> {
-            if (!data.containsKey(pathWithSeparator + entry.getKey())) {
+        messagesPerTopic.forEach((key, value) -> {
+            if (!data.containsKey(pathWithSeparator + key)) {
                 // this is a parent topic
-                output.add(new PathListItem(entry.getKey(), Optional.empty(), entry.getValue()));
+                output.add(new PathListItem(key, Optional.empty(), value));
             } else {
                 // this is a real value, remove everything after /
-                output.add(new PathListItem(entry.getKey(), Optional.of(data.get(pathWithSeparator + entry.getKey()).message()), 0));
+                output.add(new PathListItem(key, Optional.of(data.get(pathWithSeparator + key).message()), 0));
             }
         });
 
@@ -98,6 +131,11 @@ public class DatahandlerImpl implements Datahandler {
         });
 
         return new HashSet<>(output.stream().limit(Long.MAX_VALUE).toList());
+    }
+
+    @Override
+    public void monitorSelection() {
+        addToMonitoredValues(getSearchPath(), getSelectedItem());
     }
 
     @Override

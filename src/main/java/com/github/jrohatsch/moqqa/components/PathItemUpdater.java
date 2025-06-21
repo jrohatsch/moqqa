@@ -1,6 +1,7 @@
-package com.github.jrohatsch.moqqa.swingworkers;
+package com.github.jrohatsch.moqqa.components;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
+import com.github.jrohatsch.moqqa.data.PathObserver;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.ui.Colors;
 
@@ -8,7 +9,7 @@ import javax.swing.*;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>, DefaultListModel<PathListItem>> {
+public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>, DefaultListModel<PathListItem>> implements PathObserver {
     private final Datahandler dataHandler;
     private final AtomicBoolean doUpdate;
     private DefaultListModel<PathListItem> pathItemsModel;
@@ -26,6 +27,7 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
         return out;
     }
 
+    @Override
     public void updatePath(String path) {
         stop();
         this.currentPath = path;
@@ -78,11 +80,19 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
         start();
     }
 
-    private void start() {
+    public void start() {
         doUpdate.set(true);
     }
 
     public void stop() {
         doUpdate.set(false);
+    }
+
+    public void reset() {
+        stop();
+        if (pathItemsModel != null) {
+            pathItemsModel.removeAllElements();
+        }
+        currentPath = "";
     }
 }
