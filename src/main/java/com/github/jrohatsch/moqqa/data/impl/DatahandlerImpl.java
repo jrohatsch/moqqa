@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class DatahandlerImpl implements Datahandler {
     private final MqttConnector mqttConnector;
     private final ConcurrentHashMap<String, Message> data;
-    private final Set<String> monitoredTopics;
+    private final ConcurrentHashMap<String, LinkedList<Message>> monitored;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<>();
 
@@ -27,7 +27,7 @@ public class DatahandlerImpl implements Datahandler {
     public DatahandlerImpl(MqttConnector mqttConnector) {
         this.mqttConnector = mqttConnector;
         this.data = new ConcurrentHashMap<>();
-        this.monitoredTopics = ConcurrentHashMap.newKeySet();
+        this.monitored = new ConcurrentHashMap<>();
 
         // for each new message create a new thread to quickly save message in the queue
         mqttConnector.setMessageConsumer(message -> executorService.submit(() -> queue.add(message)));
@@ -38,6 +38,10 @@ public class DatahandlerImpl implements Datahandler {
                 var message = queue.poll();
                 if (message != null) {
                     data.put(message.topic(), message);
+
+                    if (monitored.containsKey(message.topic())) {
+                        monitored.get(message.topic()).add(message);
+                    }
                 }
             }
         });
@@ -71,7 +75,7 @@ public class DatahandlerImpl implements Datahandler {
 
     @Override
     public void forgetMonitoredValue(String topic) {
-        monitoredTopics.remove(topic);
+        monitored.remove(topic);
     }
 
     @Override
@@ -146,7 +150,7 @@ public class DatahandlerImpl implements Datahandler {
 
     @Override
     public void forgetMonitoredValues() {
-        monitoredTopics.clear();
+        monitored.clear();
     }
 
     @Override
@@ -158,13 +162,22 @@ public class DatahandlerImpl implements Datahandler {
         }
         String key = path + item;
         if (data.containsKey(key)) {
-            monitoredTopics.add(key);
+            monitored.put(key, new LinkedList<>());
         }
     }
 
     @Override
     public List<Message> getMonitoredValues() {
-        return monitoredTopics.stream().map(data::get).collect(Collectors.toList());
+        return monitored.keySet().stream().map(data::get).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Message> getHistoricValues(String topic) {
+        List<Message> output = new ArrayList<>();
+        if (monitored.containsKey(topic)) {
+            output.addAll(monitored.get(topic));
+        }
+        return output;
     }
 
 }

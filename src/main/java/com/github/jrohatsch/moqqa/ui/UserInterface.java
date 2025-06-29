@@ -1,6 +1,7 @@
 package com.github.jrohatsch.moqqa.ui;
 
 import com.formdev.flatlaf.FlatLightLaf;
+import com.github.jrohatsch.moqqa.components.HistoryUpdater;
 import com.github.jrohatsch.moqqa.components.MonitoredValuesUpdater;
 import com.github.jrohatsch.moqqa.components.PathItemUpdater;
 import com.github.jrohatsch.moqqa.components.SearchPathUpdater;
@@ -22,6 +23,7 @@ public class UserInterface {
 
     private SearchPathUpdater searchPathUpdater;
     private MonitoredValuesUpdater monitoredValuesUpdater;
+    private HistoryUpdater historyUpdater;
 
     public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
@@ -115,9 +117,10 @@ public class UserInterface {
         monitoredValuesUpdater = new MonitoredValuesUpdater(dataHandler);
         JPanel monitorFrame = monitoredValuesUpdater.init();
 
+        historyUpdater = new HistoryUpdater(dataHandler);
 
         tabbedPane.add("Monitor", monitorFrame);
-        tabbedPane.add("History", new JPanel());
+        tabbedPane.add("History", historyUpdater.init());
         tabbedPane.add("Publish", new JPanel());
 
         var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, pathItemsPane, tabbedPane);
@@ -165,5 +168,6 @@ public class UserInterface {
     public void start() {
         pathItemUpdater.execute();
         monitoredValuesUpdater.execute();
+        historyUpdater.execute();
     }
 }

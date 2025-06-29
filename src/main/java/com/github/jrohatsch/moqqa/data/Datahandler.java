@@ -28,4 +28,6 @@ public interface Datahandler {
     void setSelectedItem(String topic);
 
     void forgetMonitoredValue(String topic);
+
+    public List<Message> getHistoricValues(String topic);
 }

@@ -44,14 +44,18 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
             int size = pathItemsModel.getSize();
             boolean updatedPathFoundInCurrentPaths = false;
             for (int i = 0; i < size; ++i) {
-                PathListItem eachPath = pathItemsModel.get(i);
+                try {
+                    PathListItem eachPath = pathItemsModel.get(i);
 
-                if (eachPath.topic().equals(updatedPath.topic())) {
-                    updatedPathFoundInCurrentPaths = true;
-                    if (!eachPath.equals(updatedPath)) {
-                        // update value
-                        pathItemsModel.setElementAt(updatedPath, i);
+                    if (eachPath.topic().equals(updatedPath.topic())) {
+                        updatedPathFoundInCurrentPaths = true;
+                        if (!eachPath.equals(updatedPath)) {
+                            // update value
+                            pathItemsModel.setElementAt(updatedPath, i);
+                        }
                     }
+                } catch (ArrayIndexOutOfBoundsException ignored) {
+                    return;
                 }
             }
             if (!updatedPathFoundInCurrentPaths) {
@@ -61,14 +65,19 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
     }
 
     @Override
-    protected DefaultListModel<PathListItem> doInBackground() throws Exception {
-        while (true) {
-            if (!doUpdate.get()) {
-                continue;
+    protected DefaultListModel<PathListItem> doInBackground() {
+        try {
+            while (true) {
+                if (!doUpdate.get()) {
+                    continue;
+                }
+                Thread.sleep(100);
+                Collection<PathListItem> updated = dataHandler.getPathItems(this.currentPath);
+                updatePathItems(updated);
             }
-            Thread.sleep(100);
-            Collection<PathListItem> updated = dataHandler.getPathItems(this.currentPath);
-            updatePathItems(updated);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return pathItemsModel;
         }
     }
 
