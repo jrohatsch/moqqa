@@ -13,7 +13,7 @@ public interface Datahandler {
 
     void forgetMonitoredValues();
 
-    void addToMonitoredValues(String path, String item);
+    boolean addToMonitoredValues(String path, String item);
 
     List<Message> getMonitoredValues();
 
@@ -29,5 +29,5 @@ public interface Datahandler {
 
     void forgetMonitoredValue(String topic);
 
-    public List<Message> getHistoricValues(String topic);
+    List<Message> getHistoricValues(String topic);
 }

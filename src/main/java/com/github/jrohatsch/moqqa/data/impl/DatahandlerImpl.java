@@ -118,7 +118,7 @@ public class DatahandlerImpl implements Datahandler {
                 output.add(new PathListItem(key, Optional.empty(), value));
             } else {
                 // this is a real value, remove everything after /
-                output.add(new PathListItem(key, Optional.of(data.get(pathWithSeparator + key).message()), 0));
+                output.add(new PathListItem(key, Optional.of(data.get(pathWithSeparator + key).message()), value - 1));
             }
         });
 
@@ -154,15 +154,22 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
-    public void addToMonitoredValues(String path, String item) {
-        path = path.endsWith("/") ? path : path + "/";
+    public boolean addToMonitoredValues(String path, String item) {
+        if (!path.isEmpty()) {
+            path = path.endsWith("/") ? path : path + "/";
+        }
         int index = item.indexOf(" ");
         if (index != -1) {
             item = item.substring(0, index);
         }
         String key = path + item;
         if (data.containsKey(key)) {
-            monitored.put(key, new LinkedList<>());
+            var historicValues = new LinkedList<Message>();
+            historicValues.add(data.get(key));
+            monitored.put(key, historicValues);
+            return true;
+        } else {
+            return false;
         }
     }
 

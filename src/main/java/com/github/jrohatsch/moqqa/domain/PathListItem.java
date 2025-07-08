@@ -5,16 +5,20 @@ import java.util.Optional;
 public record PathListItem(String topic, Optional<String> value, long childTopics) {
     @Override
     public String toString() {
-        if (value.isEmpty()) {
-            if (childTopics > 1) {
-                return topic.concat(" (%d child topics)".formatted(childTopics));
-            } else if (childTopics == 1) {
-                return topic.concat(" (1 child topic)");
-            } else {
-                return topic;
-            }
-        } else {
-            return topic.concat(" = ").concat(value.get());
+        StringBuilder builder = new StringBuilder();
+        builder.append(topic);
+
+        if (value.isPresent()) {
+            builder.append(" = ");
+            builder.append(value.get());
         }
+
+        if (childTopics > 1) {
+            builder.append(" (%d child topics)".formatted(childTopics));
+        } else if (childTopics == 1) {
+            builder.append(" (1 child topic)");
+        }
+
+        return builder.toString();
     }
 }

@@ -89,7 +89,7 @@ public class UserInterface {
                 JList<PathListItem> list = (JList<PathListItem>) evt.getSource();
                 if (evt.getClickCount() == 2) {
                     PathListItem selection = list.getSelectedValue();
-                    if (selection.value().isEmpty()) {
+                    if (selection.childTopics() > 0) {
                         searchPathUpdater.add(selection.topic());
                         list.clearSelection();
                         dataHandler.setSearchPath(searchPathUpdater.getPath());

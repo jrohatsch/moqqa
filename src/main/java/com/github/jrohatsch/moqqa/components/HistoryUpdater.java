@@ -41,9 +41,9 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
         var scroll = new JScrollPane();
         scroll.setViewportView(this.values);
 
-        JPanel frame = new JPanel(new BorderLayout(5,5));
+        JPanel frame = new JPanel(new BorderLayout(5, 5));
         monitoredIDs = new JPanel();
-        monitoredIDs.setLayout(new BoxLayout(monitoredIDs,BoxLayout.Y_AXIS));
+        monitoredIDs.setLayout(new BoxLayout(monitoredIDs, BoxLayout.Y_AXIS));
         frame.add(monitoredIDs, BorderLayout.WEST);
         frame.add(scroll, BorderLayout.CENTER);
 
@@ -74,7 +74,7 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
 
         try {
             while (true) {
-                if(!update.get()) {
+                if (!update.get()) {
                     continue;
                 }
                 // first create a button for each monitored item
