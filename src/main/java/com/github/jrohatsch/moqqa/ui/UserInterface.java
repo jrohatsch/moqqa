@@ -18,6 +18,8 @@ public class UserInterface {
     private JFrame frame;
     private JList<PathListItem> pathItems;
     private PathItemUpdater pathItemUpdater;
+
+    // TODO remove these old components
     private JButton connectButton;
     private JTextField mqttAddress;
 
@@ -34,34 +36,17 @@ public class UserInterface {
         ToolTipManager.sharedInstance().setInitialDelay(1500);
         frame = new JFrame("Moqqa");
 
-        GridBagLayout grid = new GridBagLayout();
-        GridBagConstraints gridConstraints = new GridBagConstraints();
 
-        frame.setLayout(grid);
+        frame.setLayout(new BorderLayout());
 
-        gridConstraints.insets = new Insets(5, 5, 5, 5);
-        gridConstraints.fill = GridBagConstraints.HORIZONTAL;
-
-        // Row 1
-        gridConstraints.gridy = 0;
-        gridConstraints.gridx = 0;
-        frame.add(new JLabel("Mqtt Address:"), gridConstraints);
-
-        gridConstraints.gridy = 0;
-        gridConstraints.gridx = 1;
 
         mqttAddress = new JTextField(40);
         mqttAddress.setText("localhost:1883");
-        frame.add(mqttAddress, gridConstraints);
 
-        gridConstraints.gridy = 0;
-        gridConstraints.gridx = 2;
         connectButton = new JButton("Connect");
         connectButton.setBackground(Colors.SUCCESS);
         connectButton.setBorderPainted(false);
         connectButton.setForeground(Color.WHITE);
-
-        frame.add(connectButton, gridConstraints);
 
         connectButton.addActionListener(action -> {
             if (connectButton.getBackground().equals(Colors.SUCCESS)) {
@@ -111,7 +96,6 @@ public class UserInterface {
             }
         });
 
-
         JTabbedPane tabbedPane = new JTabbedPane();
 
         monitoredValuesUpdater = new MonitoredValuesUpdater(dataHandler);
@@ -123,35 +107,54 @@ public class UserInterface {
         tabbedPane.add("History", historyUpdater.init());
         tabbedPane.add("Publish", new JPanel());
 
-        var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, pathItemsPane, tabbedPane);
+        var splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pathItemsPane, tabbedPane);
 
-        // path items and monitored values
-        gridConstraints.gridy = 3;
-        gridConstraints.gridx = 0;
-        gridConstraints.gridwidth = 3;
-        gridConstraints.gridheight = 3;
-        frame.add(splitPane, gridConstraints);
-
+        splitPane.setResizeWeight(1);
+        frame.add(splitPane, BorderLayout.CENTER);
 
         frame.setFocusable(false);
-        frame.setSize(700, 760);
-        frame.setMinimumSize(new Dimension(700, 760));
 
-        // test toolbar
+
+        // search Path
         searchPathUpdater = new SearchPathUpdater(dataHandler);
-
         var toolbar = searchPathUpdater.getToolbar();
-
-        gridConstraints.gridy = 1;
-        gridConstraints.gridx = 0;
-        gridConstraints.gridwidth = 3;
-        gridConstraints.gridheight = 1;
         var searchPathScroll = new JScrollPane();
         searchPathScroll.setViewportView(toolbar);
 
-        frame.add(searchPathScroll, gridConstraints);
+
+        frame.add(searchPathScroll, BorderLayout.NORTH);
+
+        // connect button
+        var leftToolBar = new JToolBar();
+        var connectButton = new JButton("\uD83D\uDEDC");
+
+        connectButton.addActionListener(action -> {
+            var dialog = new JDialog();
+
+            dialog.setTitle("Connect");
+            var content = new JPanel(new BorderLayout());
+            content.add(new JLabel("Mqtt Adress:"), BorderLayout.NORTH);
+            content.add(new JTextField("localhost:1883"), BorderLayout.CENTER);
+            content.add(new JButton("Connect"), BorderLayout.SOUTH);
+            dialog.setContentPane(content);
+            dialog.setSize(200,100);
+            dialog.setVisible(true);
+
+            // TODO handle result of popup to connect to address
+            boolean connected = dataHandler.connect("localhost:1883");
+            System.out.println("connected " + connected);
+            if (connected) {
+                pathItemUpdater.start();
+            }
+        });
+
+        leftToolBar.add(connectButton);
+        leftToolBar.setOrientation(SwingConstants.VERTICAL);
+        frame.add(leftToolBar, BorderLayout.WEST);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        frame.setSize(500,500);
     }
 
     public void show() {
