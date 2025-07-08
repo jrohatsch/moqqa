@@ -19,10 +19,6 @@ public class UserInterface {
     private JList<PathListItem> pathItems;
     private PathItemUpdater pathItemUpdater;
 
-    // TODO remove these old components
-    private JButton connectButton;
-    private JTextField mqttAddress;
-
     private SearchPathUpdater searchPathUpdater;
     private MonitoredValuesUpdater monitoredValuesUpdater;
     private HistoryUpdater historyUpdater;
@@ -38,33 +34,6 @@ public class UserInterface {
 
 
         frame.setLayout(new BorderLayout());
-
-
-        mqttAddress = new JTextField(40);
-        mqttAddress.setText("localhost:1883");
-
-        connectButton = new JButton("Connect");
-        connectButton.setBackground(Colors.SUCCESS);
-        connectButton.setBorderPainted(false);
-        connectButton.setForeground(Color.WHITE);
-
-        connectButton.addActionListener(action -> {
-            if (connectButton.getBackground().equals(Colors.SUCCESS)) {
-                boolean connected = dataHandler.connect(mqttAddress.getText());
-                if (connected) {
-                    connectButton.setBackground(Colors.DANGER);
-                    mqttAddress.setEnabled(false);
-                    pathItemUpdater.start();
-                }
-            } else if (connectButton.getBackground().equals(Colors.DANGER)) {
-                dataHandler.disconnect();
-                mqttAddress.setEnabled(true);
-                clear();
-                connectButton.setBackground(Colors.SUCCESS);
-            }
-
-        });
-
 
         // split pane
         this.pathItemUpdater = new PathItemUpdater(dataHandler);
@@ -123,42 +92,45 @@ public class UserInterface {
 
 
         frame.add(searchPathScroll, BorderLayout.NORTH);
-
-        // connect button
-        var leftToolBar = new JToolBar();
-        var connectButton = new JButton("\uD83D\uDEDC");
-
-        connectButton.addActionListener(action -> {
-            var dialog = new JDialog();
-
-            dialog.setTitle("Connect");
-            var content = new JPanel(new BorderLayout());
-            content.add(new JLabel("Mqtt Adress:"), BorderLayout.NORTH);
-            content.add(new JTextField("localhost:1883"), BorderLayout.CENTER);
-            content.add(new JButton("Connect"), BorderLayout.SOUTH);
-            dialog.setContentPane(content);
-            dialog.setSize(200,100);
-            dialog.setVisible(true);
-
-            // TODO handle result of popup to connect to address
-            boolean connected = dataHandler.connect("localhost:1883");
-            System.out.println("connected " + connected);
-            if (connected) {
-                pathItemUpdater.start();
-            }
-        });
-
-        leftToolBar.add(connectButton);
-        leftToolBar.setOrientation(SwingConstants.VERTICAL);
-        frame.add(leftToolBar, BorderLayout.WEST);
-
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         frame.setSize(500,500);
     }
 
     public void show() {
-        frame.setVisible(true);
+        JFrame welcomeFrame = createWelcomeFrame();
+
+        welcomeFrame.setVisible(true);
+    }
+
+    private JFrame createWelcomeFrame() {
+        var connectFrame = new JFrame();
+
+        connectFrame.setTitle("Connect Options");
+        connectFrame.setLayout(new GridBagLayout());
+        connectFrame.setSize(400,250);
+
+        var gc = new GridBagConstraints();
+        gc.insets = new Insets(5,5,5,5);
+        gc.gridx = 0;
+        connectFrame.add(new JLabel("Mqtt Adress:"), gc);
+        gc.gridx = 1;
+        var address = new JTextField("localhost:1883",15);
+        connectFrame.add(address, gc);
+
+        var connectButton = new JButton("Connect");
+
+        connectButton.addActionListener(action -> {
+            dataHandler.connect(address.getText());
+            pathItemUpdater.start();
+            connectFrame.setVisible(false);
+            frame.setTitle(address.getText());
+            frame.setVisible(true);
+        });
+
+        gc.gridx = 2;
+        connectFrame.add(connectButton, gc);
+        return connectFrame;
     }
 
     public void clear() {
