@@ -30,7 +30,7 @@ public class UserInterface {
     public void setup() {
         FlatLightLaf.setup();
         ToolTipManager.sharedInstance().setInitialDelay(1500);
-        frame = new JFrame("Moqqa");
+        frame = new JFrame();
 
 
         frame.setLayout(new BorderLayout());
@@ -94,7 +94,7 @@ public class UserInterface {
         frame.add(searchPathScroll, BorderLayout.NORTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        frame.setSize(500,500);
+        frame.setSize(500, 500);
     }
 
     public void show() {
@@ -106,26 +106,28 @@ public class UserInterface {
     private JFrame createWelcomeFrame() {
         var connectFrame = new JFrame();
 
-        connectFrame.setTitle("Connect Options");
+        connectFrame.setTitle("Moqqa: Connection Options");
         connectFrame.setLayout(new GridBagLayout());
-        connectFrame.setSize(400,250);
+        connectFrame.setSize(400, 250);
 
         var gc = new GridBagConstraints();
-        gc.insets = new Insets(5,5,5,5);
+        gc.insets = new Insets(5, 5, 5, 5);
         gc.gridx = 0;
         connectFrame.add(new JLabel("Mqtt Adress:"), gc);
         gc.gridx = 1;
-        var address = new JTextField("localhost:1883",15);
+        var address = new JTextField("localhost:1883", 15);
         connectFrame.add(address, gc);
 
         var connectButton = new JButton("Connect");
 
         connectButton.addActionListener(action -> {
-            dataHandler.connect(address.getText());
-            pathItemUpdater.start();
-            connectFrame.setVisible(false);
-            frame.setTitle(address.getText());
-            frame.setVisible(true);
+            boolean connected = dataHandler.connect(address.getText());
+            if (connected) {
+                pathItemUpdater.start();
+                connectFrame.setVisible(false);
+                frame.setTitle("Moqqa: " + address.getText());
+                frame.setVisible(true);
+            }
         });
 
         gc.gridx = 2;

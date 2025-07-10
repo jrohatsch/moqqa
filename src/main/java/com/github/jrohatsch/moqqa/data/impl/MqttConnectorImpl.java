@@ -4,6 +4,8 @@ import com.github.jrohatsch.moqqa.data.MqttConnector;
 import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.*;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.function.Consumer;
 
 
@@ -29,9 +31,14 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
         } catch (MqttException e) {
             return false;
         }
+
+        Instant start = Instant.now();
         while (!client.isConnected()) {
             try {
                 Thread.sleep(100);
+                if (Duration.between(start, Instant.now()).compareTo(Duration.ofSeconds(10)) > 0) {
+                    return false;
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return false;

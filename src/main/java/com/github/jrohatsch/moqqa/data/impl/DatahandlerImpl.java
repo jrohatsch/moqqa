@@ -35,17 +35,29 @@ public class DatahandlerImpl implements Datahandler {
         // have one dedicated thread to read the queue and insert to data map
         executorService.submit(() -> {
             while (true) {
+                if (queue.isEmpty()) {
+                    continue;
+                }
                 var message = queue.poll();
                 if (message != null) {
-                    data.put(message.topic(), message);
-
-                    if (monitored.containsKey(message.topic())) {
-                        monitored.get(message.topic()).add(message);
-                    }
+                    handleMessage(message);
                 }
             }
         });
 
+    }
+
+    private void handleMessage(Message message) {
+        if (message.message().equals("")) {
+            data.remove(message.topic());
+            return;
+        }
+
+        data.put(message.topic(), message);
+
+        if (monitored.containsKey(message.topic())) {
+            monitored.get(message.topic()).add(message);
+        }
     }
 
     public String getSearchPath() {

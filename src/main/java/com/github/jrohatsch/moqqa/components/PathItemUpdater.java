@@ -7,6 +7,7 @@ import com.github.jrohatsch.moqqa.ui.Colors;
 
 import javax.swing.*;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>, DefaultListModel<PathListItem>> implements PathObserver {
@@ -60,6 +61,14 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
             }
             if (!updatedPathFoundInCurrentPaths) {
                 pathItemsModel.addElement(updatedPath);
+            }
+        }
+        Iterator<PathListItem> iterator = pathItemsModel.elements().asIterator();
+        while (iterator.hasNext()) {
+            PathListItem displayed = iterator.next();
+
+            if (!updatedPaths.contains(displayed)) {
+                pathItemsModel.removeElement(displayed);
             }
         }
     }

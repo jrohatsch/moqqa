@@ -2,7 +2,6 @@ package com.github.jrohatsch.moqqa.data.impl;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
-import  com.github.jrohatsch.moqqa.data.impl.DatahandlerImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -87,7 +86,19 @@ public class DataHandlerTests {
         wait(Duration.ofMillis(10));
 
         var historicValues = datahandler.getHistoricValues("topic").stream().map(message -> message.message()).collect(Collectors.toList());
-        assertEquals(List.of("A","B","C","D"), historicValues);
+        assertEquals(List.of("A", "B", "C", "D"), historicValues);
+    }
+
+    @Test
+    public void test_that_values_are_deleted() {
+        mqttConnector.mockMessage("topic", "A");
+        wait(Duration.ofMillis(10));
+        var paths = datahandler.getPathItems("");
+        assertTrue(paths.contains(new PathListItem("topic", Optional.of("A"), 0)));
+        mqttConnector.mockMessage("topic", "");
+        wait(Duration.ofMillis(10));
+        assertTrue(datahandler.getPathItems("").isEmpty());
+
     }
 
 }

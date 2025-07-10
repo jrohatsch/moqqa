@@ -5,7 +5,6 @@ import com.github.jrohatsch.moqqa.data.Datahandler;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,10 +13,11 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
     private final JTable values;
     private final DefaultTableModel valuesModel;
     private final Datahandler datahandler;
+    private final TimeUtils timeUtils;
     private JPanel monitoredIDs;
-    private ArrayList<String> monitoredTopics;
+    private final ArrayList<String> monitoredTopics;
     private Optional<String> selectedTopic;
-    private AtomicBoolean update;
+    private final AtomicBoolean update;
 
     public HistoryUpdater(Datahandler datahandler) {
         this.datahandler = datahandler;
@@ -31,6 +31,7 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
         this.update = new AtomicBoolean(false);
         this.selectedTopic = Optional.empty();
         this.monitoredTopics = new ArrayList<>();
+        this.timeUtils = new TimeUtils();
     }
 
     public JPanel init() {
@@ -44,10 +45,34 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
         JPanel frame = new JPanel(new BorderLayout(5, 5));
         monitoredIDs = new JPanel();
         monitoredIDs.setLayout(new BoxLayout(monitoredIDs, BoxLayout.Y_AXIS));
+
+        var topBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        topBar.add(new JLabel("Timezone:"));
+
+        JComboBox TimeZoneDropdown = new JComboBox<>(timeUtils.getZoneIds());
+        topBar.add(TimeZoneDropdown);
+        TimeZoneDropdown.setSelectedItem(timeUtils.getZoneId());
+        TimeZoneDropdown.addActionListener(a -> {
+            update.set(false);
+            String selectedItem = (String) TimeZoneDropdown.getSelectedItem();
+            timeUtils.select(selectedItem);
+            removeAll();
+            update.set(true);
+        });
+
+        frame.add(topBar, BorderLayout.NORTH);
         frame.add(monitoredIDs, BorderLayout.WEST);
         frame.add(scroll, BorderLayout.CENTER);
 
         return frame;
+    }
+
+    private void removeAll() {
+        final int size = valuesModel.getRowCount();
+        for (int i = 0; i < size; ++i) {
+            valuesModel.removeRow(0);
+        }
     }
 
     private void updateSelectedTopic(String topic) {
@@ -105,13 +130,13 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
                     var values = datahandler.getHistoricValues(selectedTopic.get());
                     for (var message : values) {
                         if (valuesModel.getRowCount() == 0) {
-                            valuesModel.addRow(new String[]{message.topic(), message.time().toString(), message.message()});
+                            valuesModel.addRow(new String[]{message.topic(), timeUtils.format(message.time()), message.message()});
                         } else {
                             // only insert if the timestamp is bigger than the timestamp on row 0!
                             String timeString = (String) valuesModel.getValueAt(0, 1);
-                            Instant latestTime = Instant.parse(timeString);
-                            if (!message.time().equals(latestTime) && message.time().isAfter(latestTime)) {
-                                valuesModel.insertRow(0, new String[]{message.topic(), message.time().toString(), message.message()});
+
+                            if (timeUtils.compare(timeString, message.time()) < 0) {
+                                valuesModel.insertRow(0, new String[]{message.topic(), timeUtils.format(message.time()), message.message()});
                             }
                         }
                     }
