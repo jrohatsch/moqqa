@@ -3,9 +3,13 @@ package com.github.jrohatsch.moqqa.components;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -14,10 +18,11 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
     private final DefaultTableModel valuesModel;
     private final Datahandler datahandler;
     private final TimeUtils timeUtils;
-    private JPanel monitoredIDs;
     private final ArrayList<String> monitoredTopics;
-    private Optional<String> selectedTopic;
     private final AtomicBoolean update;
+    private JPanel monitoredIDs;
+    private Optional<String> selectedTopic;
+    private JPanel frame;
 
     public HistoryUpdater(Datahandler datahandler) {
         this.datahandler = datahandler;
@@ -42,7 +47,7 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
         var scroll = new JScrollPane();
         scroll.setViewportView(this.values);
 
-        JPanel frame = new JPanel(new BorderLayout(5, 5));
+        frame = new JPanel(new BorderLayout(5, 5));
         monitoredIDs = new JPanel();
         monitoredIDs.setLayout(new BoxLayout(monitoredIDs, BoxLayout.Y_AXIS));
 
@@ -50,22 +55,59 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
 
         topBar.add(new JLabel("Timezone:"));
 
-        JComboBox TimeZoneDropdown = new JComboBox<>(timeUtils.getZoneIds());
-        topBar.add(TimeZoneDropdown);
-        TimeZoneDropdown.setSelectedItem(timeUtils.getZoneId());
-        TimeZoneDropdown.addActionListener(a -> {
+        JComboBox timeZoneDropdown = new JComboBox<>(timeUtils.getZoneIds());
+        topBar.add(timeZoneDropdown);
+        timeZoneDropdown.setSelectedItem(timeUtils.getZoneId());
+        timeZoneDropdown.addActionListener(a -> {
             update.set(false);
-            String selectedItem = (String) TimeZoneDropdown.getSelectedItem();
+            String selectedItem = (String) timeZoneDropdown.getSelectedItem();
             timeUtils.select(selectedItem);
             removeAll();
             update.set(true);
         });
+
+        topBar.add(createExportButton());
 
         frame.add(topBar, BorderLayout.NORTH);
         frame.add(monitoredIDs, BorderLayout.WEST);
         frame.add(scroll, BorderLayout.CENTER);
 
         return frame;
+    }
+
+    private JButton createExportButton() {
+        var button = new JButton("Export");
+
+        button.addActionListener(action -> {
+            update.set(false);
+            String[] linesToWrite = ExportUtils.exportTableDataAsTabSeparatedValues(valuesModel);
+            var fileChooser = new JFileChooser();
+            var commaFileFilter = new FileNameExtensionFilter("Tab Separated Values (.tsv)", ".tsv");
+            fileChooser.setFileFilter(commaFileFilter);
+
+            int option = fileChooser.showSaveDialog(frame);
+            if (option == JFileChooser.APPROVE_OPTION) {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                if (!filePath.endsWith(".tsv")) {
+                    filePath += ".tsv";
+                }
+                try {
+                    var fileWriter = new FileWriter(filePath);
+                    Arrays.stream(linesToWrite).forEach(line -> {
+                        try {
+                            fileWriter.write(line);
+                        } catch (IOException e) {
+                        }
+                    });
+                    fileWriter.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            update.set(true);
+        });
+
+        return button;
     }
 
     private void removeAll() {

@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 public class TimeUtils {
     private final String[] zoneIds;
@@ -36,7 +37,9 @@ public class TimeUtils {
     }
 
     public String[] getZoneIds() {
-        return zoneIds.clone();
+        var copy = zoneIds.clone();
+        Arrays.sort(copy);
+        return copy;
     }
 
     public String getZoneId() {
