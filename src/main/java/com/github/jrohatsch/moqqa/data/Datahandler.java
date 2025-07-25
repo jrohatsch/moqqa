@@ -7,13 +7,13 @@ import java.util.Collection;
 import java.util.List;
 
 public interface Datahandler {
-    boolean connect(String url);
-
-    void disconnect();
+    MqttConnector connector();
 
     void forgetMonitoredValues();
 
     boolean addToMonitoredValues(String path, String item);
+
+    boolean isMonitored(String topic);
 
     List<Message> getMonitoredValues();
 
@@ -29,5 +29,5 @@ public interface Datahandler {
 
     void forgetMonitoredValue(String topic);
 
-    List<Message> getHistoricValues(String topic);
+    List<Message> getHistoricValues();
 }

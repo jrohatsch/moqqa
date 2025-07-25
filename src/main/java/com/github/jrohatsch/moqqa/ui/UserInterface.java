@@ -1,12 +1,10 @@
 package com.github.jrohatsch.moqqa.ui;
 
-import com.formdev.flatlaf.FlatLightLaf;
-import com.github.jrohatsch.moqqa.components.HistoryUpdater;
-import com.github.jrohatsch.moqqa.components.MonitoredValuesUpdater;
-import com.github.jrohatsch.moqqa.components.PathItemUpdater;
-import com.github.jrohatsch.moqqa.components.SearchPathUpdater;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.github.jrohatsch.moqqa.components.*;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
+import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,8 +26,7 @@ public class UserInterface {
     }
 
     public void setup() {
-        FlatLightLaf.setup();
-        ToolTipManager.sharedInstance().setInitialDelay(1500);
+        FlatDarculaLaf.setup();
         frame = new JFrame();
 
 
@@ -72,9 +69,9 @@ public class UserInterface {
 
         historyUpdater = new HistoryUpdater(dataHandler);
 
-        tabbedPane.add("Monitor", monitorFrame);
-        tabbedPane.add("History", historyUpdater.init());
-        tabbedPane.add("Publish", new JPanel());
+        tabbedPane.add(TextUtils.getText("label.monitor"), monitorFrame);
+        tabbedPane.add(TextUtils.getText("label.history"), historyUpdater.init());
+        tabbedPane.add(TextUtils.getText("label.publish"), new Publisher(dataHandler).init());
 
         var splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pathItemsPane, tabbedPane);
 
@@ -106,22 +103,22 @@ public class UserInterface {
     private JFrame createWelcomeFrame() {
         var connectFrame = new JFrame();
 
-        connectFrame.setTitle("Moqqa: Connection Options");
+        connectFrame.setTitle("Moqqa: %s".formatted(TextUtils.getText("label.connectOptions")));
         connectFrame.setLayout(new GridBagLayout());
         connectFrame.setSize(400, 250);
 
         var gc = new GridBagConstraints();
         gc.insets = new Insets(5, 5, 5, 5);
         gc.gridx = 0;
-        connectFrame.add(new JLabel("Mqtt Adress:"), gc);
+        connectFrame.add(new JLabel(TextUtils.getText("label.mqttAddress")), gc);
         gc.gridx = 1;
         var address = new JTextField("localhost:1883", 15);
         connectFrame.add(address, gc);
 
-        var connectButton = new JButton("Connect");
+        var connectButton = new JButton(TextUtils.getText("button.connect"));
 
         connectButton.addActionListener(action -> {
-            boolean connected = dataHandler.connect(address.getText());
+            boolean connected = dataHandler.connector().connect(address.getText());
             if (connected) {
                 pathItemUpdater.start();
                 connectFrame.setVisible(false);
@@ -134,13 +131,6 @@ public class UserInterface {
         connectFrame.add(connectButton, gc);
         return connectFrame;
     }
-
-    public void clear() {
-        pathItemUpdater.reset();
-        searchPathUpdater.clear();
-        monitoredValuesUpdater.clear();
-    }
-
 
     public void start() {
         pathItemUpdater.execute();

@@ -14,4 +14,6 @@ public interface MqttConnector {
     IMqttAsyncClient getClient(String url) throws MqttException;
 
     void setMessageConsumer(Consumer<Message> consumer);
+
+    void publish(String topic, String message, boolean retained);
 }

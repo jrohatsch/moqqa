@@ -90,11 +90,6 @@ public class DatahandlerImpl implements Datahandler {
         monitored.remove(topic);
     }
 
-    @Override
-    public boolean connect(String url) {
-        return mqttConnector.connect(url);
-    }
-
 
     @Override
     public Set<PathListItem> getPathItems(String path) {
@@ -155,9 +150,8 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
-    public void disconnect() {
-        mqttConnector.disconnect();
-        data.clear();
+    public MqttConnector connector() {
+        return mqttConnector;
     }
 
     @Override
@@ -186,16 +180,20 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
+    public boolean isMonitored(String topic) {
+        return monitored.containsKey(topic);
+    }
+
+    @Override
     public List<Message> getMonitoredValues() {
         return monitored.keySet().stream().map(data::get).collect(Collectors.toList());
     }
 
     @Override
-    public List<Message> getHistoricValues(String topic) {
-        List<Message> output = new ArrayList<>();
-        if (monitored.containsKey(topic)) {
-            output.addAll(monitored.get(topic));
-        }
+    public List<Message> getHistoricValues() {
+        ArrayList<Message> output = new ArrayList<>();
+        monitored.values().stream().flatMap(Collection::stream).forEach(output::add);
+        output.sort(Comparator.comparing(Message::time));
         return output;
     }
 

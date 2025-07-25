@@ -1,4 +1,4 @@
-package com.github.jrohatsch.moqqa.components;
+package com.github.jrohatsch.moqqa.utils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

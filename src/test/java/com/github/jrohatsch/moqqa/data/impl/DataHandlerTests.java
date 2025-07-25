@@ -1,6 +1,7 @@
 package com.github.jrohatsch.moqqa.data.impl;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
+import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,17 +76,24 @@ public class DataHandlerTests {
 
     @Test
     public void test_that_monitored_values_show_all_historic_values() {
-        mqttConnector.mockMessage("topic", "A");
+        mqttConnector.mockMessage("topic1", "A");
         wait(Duration.ofMillis(10));
-        assertTrue(datahandler.addToMonitoredValues("", "topic"));
-        mqttConnector.mockMessage("topic", "B");
-        wait(Duration.ofMillis(1));
-        mqttConnector.mockMessage("topic", "C");
-        wait(Duration.ofMillis(1));
-        mqttConnector.mockMessage("topic", "D");
+        mqttConnector.mockMessage("topic2", "B");
         wait(Duration.ofMillis(10));
 
-        var historicValues = datahandler.getHistoricValues("topic").stream().map(message -> message.message()).collect(Collectors.toList());
+        // after topics have initial values begin to monitor
+        assertTrue(datahandler.addToMonitoredValues("", "topic1"));
+        assertTrue(datahandler.addToMonitoredValues("", "topic2"));
+
+        wait(Duration.ofMillis(10));
+        mqttConnector.mockMessage("topic1", "C");
+        wait(Duration.ofMillis(10));
+        mqttConnector.mockMessage("topic2", "D");
+        wait(Duration.ofMillis(10));
+
+        var historicValues = datahandler.getHistoricValues().stream().map(Message::message).collect(Collectors.toList());
+
+        // messages should be ordered by time
         assertEquals(List.of("A", "B", "C", "D"), historicValues);
     }
 

@@ -76,6 +76,17 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     }
 
     @Override
+    public void publish(String topic, String message, boolean retained) {
+        var mqttMessage = new MqttMessage(message.getBytes());
+        mqttMessage.setRetained(retained);
+        try {
+            client.publish(topic, mqttMessage);
+        } catch (MqttException e) {
+            System.err.println("failed to publish message");
+        }
+    }
+
+    @Override
     public void disconnect() {
         try {
             client.disconnect();

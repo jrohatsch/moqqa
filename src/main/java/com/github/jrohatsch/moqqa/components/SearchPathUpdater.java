@@ -2,10 +2,10 @@ package com.github.jrohatsch.moqqa.components;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.ui.SearchPathButton;
+import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ResourceBundle;
 
 public class SearchPathUpdater {
     private final Datahandler datahandler;
@@ -67,9 +67,7 @@ public class SearchPathUpdater {
         }
 
         final int index = path.getComponentCount();
-        button.addActionListener(action -> {
-            stepToIndex(index);
-        });
+        button.addActionListener(action -> stepToIndex(index));
         path.add(button);
         path.updateUI();
     }
@@ -80,7 +78,7 @@ public class SearchPathUpdater {
 
     public void clear() {
         path.removeAll();
-        add(">", ResourceBundle.getBundle("tooltips").getString("path.root"));
+        add(">", TextUtils.getText("tooltip.rootPath"));
         path.updateUI();
     }
 }

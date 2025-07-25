@@ -3,6 +3,7 @@ package com.github.jrohatsch.moqqa.components;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.ui.Colors;
+import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -38,12 +39,12 @@ public class MonitoredValuesUpdater extends SwingWorker<Void, Void> {
 
         var buttonBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        JButton addButton = new JButton("Add");
+        JButton addButton = new JButton(TextUtils.getText("button.add"));
         addButton.addActionListener(action -> datahandler.monitorSelection());
 
         buttonBar.add(addButton);
 
-        JButton removeButton = new JButton("Remove");
+        JButton removeButton = new JButton(TextUtils.getText("button.remove"));
         removeButton.setEnabled(false);
         removeButton.addActionListener(action -> {
             int selectedRowIndex = table.getSelectedRow();
@@ -62,7 +63,7 @@ public class MonitoredValuesUpdater extends SwingWorker<Void, Void> {
         });
 
 
-        JButton removeAllButton = new JButton("Remove All");
+        JButton removeAllButton = new JButton(TextUtils.getText("button.removeAll"));
         removeAllButton.addActionListener(action -> removeAll());
         buttonBar.add(removeAllButton);
 
