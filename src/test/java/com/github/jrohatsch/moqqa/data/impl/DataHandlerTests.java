@@ -106,7 +106,26 @@ public class DataHandlerTests {
         mqttConnector.mockMessage("topic", "");
         wait(Duration.ofMillis(10));
         assertTrue(datahandler.getPathItems("").isEmpty());
-
     }
 
+    @Test
+    public void test_that_base_values_are_filtered() {
+        mqttConnector.mockMessage("ignored_filter_me_ignored", "A");
+        mqttConnector.mockMessage("ignored", "A");
+        wait(Duration.ofMillis(10));
+        datahandler.setSearchFilter(message -> message.topic().contains("filter_me"));
+        var paths = datahandler.getPathItems("");
+        assertTrue(paths.contains(new PathListItem("ignored_filter_me_ignored", Optional.of("A"), 0)));
+        assertEquals(1, paths.size());
+    }
+
+    @Test
+    public void test_that_child_values_are_filtered() {
+        mqttConnector.mockMessage("root/ignored_filter_me_ignored", "A");
+        mqttConnector.mockMessage("root/ignored", "A");
+        wait(Duration.ofMillis(10));
+        datahandler.setSearchFilter(message -> message.topic().contains("filter_me"));
+        var paths = datahandler.getPathItems("");
+        assertTrue(paths.contains(new PathListItem("root", Optional.empty(), 1)));
+    }
 }

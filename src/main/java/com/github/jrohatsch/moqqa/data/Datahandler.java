@@ -5,6 +5,7 @@ import com.github.jrohatsch.moqqa.domain.PathListItem;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
 public interface Datahandler {
     MqttConnector connector();
@@ -17,11 +18,13 @@ public interface Datahandler {
 
     List<Message> getMonitoredValues();
 
-    Collection<PathListItem> getPathItems(String currentPath);
+    Collection<PathListItem> getPathItems(String path);
 
     void monitorSelection();
 
     void setSearchPath(String path);
+
+    void setSearchFilter(Predicate<Message> filter);
 
     void registerPathObserver(PathObserver observer);
 

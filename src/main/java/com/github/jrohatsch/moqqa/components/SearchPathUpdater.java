@@ -2,7 +2,6 @@ package com.github.jrohatsch.moqqa.components;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.ui.SearchPathButton;
-import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -74,11 +73,5 @@ public class SearchPathUpdater {
 
     public JToolBar getToolbar() {
         return path;
-    }
-
-    public void clear() {
-        path.removeAll();
-        add(">", TextUtils.getText("tooltip.rootPath"));
-        path.updateUI();
     }
 }

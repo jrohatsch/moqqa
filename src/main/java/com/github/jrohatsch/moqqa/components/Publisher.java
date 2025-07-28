@@ -4,6 +4,7 @@ import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class Publisher {
@@ -18,6 +19,7 @@ public class Publisher {
         var topicFrame = new JPanel(new BorderLayout(5, 5));
         topicFrame.add(new JLabel(TextUtils.getText("label.topic")), BorderLayout.WEST);
         var topicTextField = new JTextArea();
+        topicFrame.setBorder(new EmptyBorder(10, 0, 5, 0));
         topicFrame.add(topicTextField, BorderLayout.CENTER);
 
         frame.add(topicFrame, BorderLayout.NORTH);

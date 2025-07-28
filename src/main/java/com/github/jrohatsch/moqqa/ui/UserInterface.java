@@ -1,6 +1,6 @@
 package com.github.jrohatsch.moqqa.ui;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.github.jrohatsch.moqqa.components.*;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
@@ -26,7 +26,7 @@ public class UserInterface {
     }
 
     public void setup() {
-        FlatDarculaLaf.setup();
+        FlatLightLaf.setup();
         frame = new JFrame();
 
 
@@ -72,6 +72,7 @@ public class UserInterface {
         tabbedPane.add(TextUtils.getText("label.monitor"), monitorFrame);
         tabbedPane.add(TextUtils.getText("label.history"), historyUpdater.init());
         tabbedPane.add(TextUtils.getText("label.publish"), new Publisher(dataHandler).init());
+        tabbedPane.add("Filter", new FilterPathItems(dataHandler).init());
 
         var splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pathItemsPane, tabbedPane);
 

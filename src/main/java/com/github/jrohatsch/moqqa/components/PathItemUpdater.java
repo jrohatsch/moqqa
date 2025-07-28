@@ -74,19 +74,18 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
     }
 
     @Override
-    protected DefaultListModel<PathListItem> doInBackground() {
-        try {
-            while (true) {
-                if (!doUpdate.get()) {
-                    continue;
-                }
-                Thread.sleep(100);
-                Collection<PathListItem> updated = dataHandler.getPathItems(this.currentPath);
-                updatePathItems(updated);
+    protected DefaultListModel<PathListItem> doInBackground() throws InterruptedException {
+        while (true) {
+            if (!doUpdate.get()) {
+                continue;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return pathItemsModel;
+            Thread.sleep(100);
+            Collection<PathListItem> updated = dataHandler.getPathItems(this.currentPath);
+            try {
+                updatePathItems(updated);
+            } catch (Exception ignored) {
+                System.err.println("error updading pathItems");
+            }
         }
     }
 
@@ -104,13 +103,5 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
 
     public void stop() {
         doUpdate.set(false);
-    }
-
-    public void reset() {
-        stop();
-        if (pathItemsModel != null) {
-            pathItemsModel.removeAllElements();
-        }
-        currentPath = "";
     }
 }

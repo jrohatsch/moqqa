@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class DatahandlerImpl implements Datahandler {
@@ -19,8 +20,8 @@ public class DatahandlerImpl implements Datahandler {
     private final ConcurrentHashMap<String, LinkedList<Message>> monitored;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<>();
-
     private final List<PathObserver> pathObservers = new ArrayList<>();
+    private Predicate<Message> searchFilter = message -> true;
     private String searchPath = "";
     private String selectedItem = "";
 
@@ -72,6 +73,11 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
+    public void setSearchFilter(Predicate<Message> filter) {
+        searchFilter = filter;
+    }
+
+    @Override
     public void registerPathObserver(PathObserver observer) {
         pathObservers.add(observer);
     }
@@ -108,6 +114,7 @@ public class DatahandlerImpl implements Datahandler {
 
         Map<String, Long> messagesPerTopic = data.keySet().stream()
                 .filter(topic -> topic.startsWith(pathWithSeparator))
+                .filter(topic -> searchFilter.test(data.get(topic)))
                 .collect(Collectors.groupingBy(topic -> {
                     topic = topic.replace(pathWithSeparator, "");
                     int separatorIndex = topic.indexOf("/");
