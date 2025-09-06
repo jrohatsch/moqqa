@@ -6,10 +6,13 @@ import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
 
 public class UserInterface {
     private final Datahandler dataHandler;
@@ -76,7 +79,7 @@ public class UserInterface {
 
         var splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pathItemsPane, tabbedPane);
 
-        splitPane.setResizeWeight(1);
+        splitPane.setResizeWeight(0.8);
         frame.add(splitPane, BorderLayout.CENTER);
 
         frame.setFocusable(false);
@@ -95,13 +98,13 @@ public class UserInterface {
         frame.setSize(500, 500);
     }
 
-    public void show() {
+    public void show() throws IOException {
         JFrame welcomeFrame = createWelcomeFrame();
 
         welcomeFrame.setVisible(true);
     }
 
-    private JFrame createWelcomeFrame() {
+    private JFrame createWelcomeFrame() throws IOException {
         var connectFrame = new JFrame();
 
         connectFrame.setTitle("Moqqa: %s".formatted(TextUtils.getText("label.connectOptions")));
@@ -119,13 +122,19 @@ public class UserInterface {
         var connectButton = new JButton(TextUtils.getText("button.connect"));
 
         connectButton.addActionListener(action -> {
+            // first disable connect button
+            connectButton.setEnabled(false);
             boolean connected = dataHandler.connector().connect(address.getText());
             if (connected) {
                 pathItemUpdater.start();
                 connectFrame.setVisible(false);
                 frame.setTitle("Moqqa: " + address.getText());
                 frame.setVisible(true);
+            } else {
+                System.out.println("Could not connect");
             }
+            // now enable again
+            connectButton.setEnabled(true);
         });
 
         gc.gridx = 2;

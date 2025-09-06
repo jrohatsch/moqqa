@@ -10,8 +10,8 @@ import java.util.function.Predicate;
 
 public class FilterPathItems {
     private final Datahandler datahandler;
-    private JTextField topicTextField;
-    private JTextField valueTextField;
+    private TextFieldWithDescription topicTextField;
+    private TextFieldWithDescription valueTextField;
 
     public FilterPathItems(Datahandler datahandler) {
         this.datahandler = datahandler;
@@ -23,8 +23,11 @@ public class FilterPathItems {
         var mainLayout = new BoxLayout(frame, BoxLayout.Y_AXIS);
         frame.setLayout(mainLayout);
 
-        topicTextField = addTextField(frame, "Topic Filter:");
-        valueTextField = addTextField(frame, "Value Filter:");
+        topicTextField = new TextFieldWithDescription("Topic Filter:");
+        valueTextField = new TextFieldWithDescription("Value Filter:");
+
+        frame.add(topicTextField.get());
+        frame.add(valueTextField.get());
 
 
         JPanel buttonBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -52,7 +55,8 @@ public class FilterPathItems {
         JPanel topicFrame = new JPanel();
         topicFrame.setLayout(new BoxLayout(topicFrame, BoxLayout.X_AXIS));
         topicFrame.setBorder(new EmptyBorder(new Insets(5, 5, 5, 5)));
-        JLabel label = new JLabel(description + "    ");
+        JLabel label = new JLabel(description);
+        label.setBorder(new EmptyBorder(0,0,0,20));
         topicFrame.add(label);
 
         var topicFilter = new JTextField();

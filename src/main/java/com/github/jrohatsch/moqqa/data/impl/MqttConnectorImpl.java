@@ -6,11 +6,13 @@ import org.eclipse.paho.client.mqttv3.*;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Properties;
 import java.util.function.Consumer;
 
 
 public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     private IMqttAsyncClient client;
+    private MqttConnectOptions connectOptions = new MqttConnectOptions();
     private Consumer<Message> messageConsumer;
 
     @Override
@@ -18,17 +20,24 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
         return new MqttAsyncClient("tcp://" + url, "Moqqa");
     }
 
+    public void setUserNameAndPassword(String username, String password) {
+        connectOptions.setUserName(username);
+        connectOptions.setPassword(password.toCharArray());
+    }
+
     @Override
     public boolean connect(String url) {
         try {
             client = getClient(url);
         } catch (MqttException e) {
+            System.err.println(e);
             return false;
         }
 
         try {
-            client.connect();
+            client.connect(connectOptions);
         } catch (MqttException e) {
+            System.err.println(e);
             return false;
         }
 
@@ -36,7 +45,7 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
         while (!client.isConnected()) {
             try {
                 Thread.sleep(100);
-                if (Duration.between(start, Instant.now()).compareTo(Duration.ofSeconds(10)) > 0) {
+                if (Duration.between(start, Instant.now()).compareTo(Duration.ofSeconds(30)) > 0) {
                     return false;
                 }
             } catch (InterruptedException e) {

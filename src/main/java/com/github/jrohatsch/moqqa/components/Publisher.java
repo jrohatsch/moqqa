@@ -16,20 +16,16 @@ public class Publisher {
 
     public JPanel init() {
         var frame = new JPanel(new BorderLayout(5, 5));
-        var topicFrame = new JPanel(new BorderLayout(5, 5));
-        topicFrame.add(new JLabel(TextUtils.getText("label.topic")), BorderLayout.WEST);
-        var topicTextField = new JTextArea();
-        topicFrame.setBorder(new EmptyBorder(10, 0, 5, 0));
-        topicFrame.add(topicTextField, BorderLayout.CENTER);
+        var topicTextField = new TextFieldWithDescription("Topic:");
 
-        frame.add(topicFrame, BorderLayout.NORTH);
+        frame.add(topicTextField.get(), BorderLayout.NORTH);
         JTextArea messageTextArea = new JTextArea();
         frame.add(messageTextArea, BorderLayout.CENTER);
         var buttonBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JCheckBox retainedCheckBox = new JCheckBox("retained");
         buttonBar.add(retainedCheckBox);
         var publishButton = new JButton("publish");
-        publishButton.addActionListener(action -> datahandler.connector().publish(topicTextField.getText(), messageTextArea.getText(), retainedCheckBox.isSelected()));
+        publishButton.addActionListener(action -> datahandler.connector().publish((String) topicTextField.getText(), messageTextArea.getText(), retainedCheckBox.isSelected()));
         buttonBar.add(publishButton);
         frame.add(buttonBar, BorderLayout.SOUTH);
         return frame;
