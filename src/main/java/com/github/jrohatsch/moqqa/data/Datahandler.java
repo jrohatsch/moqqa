@@ -5,6 +5,7 @@ import com.github.jrohatsch.moqqa.domain.PathListItem;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public interface Datahandler {
@@ -28,7 +29,10 @@ public interface Datahandler {
 
     void registerPathObserver(PathObserver observer);
 
-    void setSelectedItem(String topic);
+    void setSelectedItem(PathListItem pathListItem);
+
+    void registerSelectionObserver(SelectionObserver observer);
+    Optional<PathListItem> getSelectedItem();
 
     void forgetMonitoredValue(String topic);
 

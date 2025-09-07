@@ -2,7 +2,6 @@ package com.github.jrohatsch.moqqa.components;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.Message;
-import com.github.jrohatsch.moqqa.ui.Colors;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
@@ -10,6 +9,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
+@Deprecated
 public class MonitoredValuesUpdater extends SwingWorker<Void, Void> {
     private final Datahandler datahandler;
     private final DefaultTableModel tableModel;
@@ -28,7 +28,7 @@ public class MonitoredValuesUpdater extends SwingWorker<Void, Void> {
     }
 
     public JPanel init() {
-        table.setSelectionBackground(Colors.SUCCESS);
+        //table.setSelectionBackground(Colors.SELECTED);
 
         tableModel.addColumn("topic");
         tableModel.addColumn("value");

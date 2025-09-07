@@ -1,6 +1,8 @@
 package com.github.jrohatsch.moqqa.ui;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.ui.FlatArrowButton;
 import com.github.jrohatsch.moqqa.components.*;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
@@ -23,13 +25,14 @@ public class UserInterface {
     private SearchPathUpdater searchPathUpdater;
     private MonitoredValuesUpdater monitoredValuesUpdater;
     private HistoryUpdater historyUpdater;
+    private PathItemInfo pathItemInfo;
 
     public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
     }
 
     public void setup() {
-        FlatLightLaf.setup();
+        FlatDarculaLaf.setup();
         frame = new JFrame();
 
 
@@ -60,19 +63,15 @@ public class UserInterface {
 
         pathItems.addListSelectionListener(e -> {
             var selectedItem = pathItems.getSelectedValue();
-            if (selectedItem != null) {
-                dataHandler.setSelectedItem(selectedItem.topic());
-            }
+            dataHandler.setSelectedItem(selectedItem);
         });
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
-        monitoredValuesUpdater = new MonitoredValuesUpdater(dataHandler);
-        JPanel monitorFrame = monitoredValuesUpdater.init();
-
         historyUpdater = new HistoryUpdater(dataHandler);
+        pathItemInfo = new PathItemInfo(dataHandler);
 
-        tabbedPane.add(TextUtils.getText("label.monitor"), monitorFrame);
+        tabbedPane.add("Info", pathItemInfo.init());
         tabbedPane.add(TextUtils.getText("label.history"), historyUpdater.init());
         tabbedPane.add(TextUtils.getText("label.publish"), new Publisher(dataHandler).init());
         tabbedPane.add("Filter", new FilterPathItems(dataHandler).init());
@@ -101,6 +100,7 @@ public class UserInterface {
     public void show() throws IOException {
         JFrame welcomeFrame = createWelcomeFrame();
 
+        welcomeFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         welcomeFrame.setVisible(true);
     }
 
@@ -129,6 +129,7 @@ public class UserInterface {
                 pathItemUpdater.start();
                 connectFrame.setVisible(false);
                 frame.setTitle("Moqqa: " + address.getText());
+                frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 frame.setVisible(true);
             } else {
                 System.out.println("Could not connect");
@@ -144,7 +145,6 @@ public class UserInterface {
 
     public void start() {
         pathItemUpdater.execute();
-        monitoredValuesUpdater.execute();
         historyUpdater.execute();
     }
 }
