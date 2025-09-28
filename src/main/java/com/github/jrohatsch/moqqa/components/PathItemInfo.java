@@ -17,8 +17,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
     private final JLabel children = new JLabel();
     private final JLabel placeHolder = new JLabel("Select an item to inspect!");
     private String path = "";
-    private JSeparator topicSeparator;
-    private JSeparator childrenSeparator;
+    private JComponent topicSeparator;
     private JLabel analyzeText;
     private JButton trackValueButton;
 
@@ -36,14 +35,14 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
         panel.setLayout(mainLayout);
 
         panel.add(placeHolder);
+
         panel.add(fullTopicText);
         fullTopicText.setFont(fullTopicText.getFont().deriveFont(Font.BOLD));
         panel.add(fullTopic);
-        topicSeparator = new JSeparator();
+        topicSeparator = buildSeparator();
         panel.add(topicSeparator);
         panel.add(children);
-        childrenSeparator = new JSeparator();
-        panel.add(childrenSeparator);
+
 
         analyzeText = new JLabel("Analyze:");
         analyzeText.setFont(fullTopicText.getFont().deriveFont(Font.BOLD));
@@ -61,6 +60,12 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
         clear();
 
         return panel;
+    }
+
+    private JComponent buildSeparator() {
+        JComponent separator = new JLabel("");
+        separator.setBorder(new EmptyBorder(new Insets(10, 0, 10, 0)));
+        return separator;
     }
 
     @Override
@@ -85,13 +90,18 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
         placeHolder.setVisible(false);
         fullTopicText.setVisible(true);
         fullTopic.setVisible(true);
-        children.setVisible(true);
         topicSeparator.setVisible(true);
 
-        datahandler.getSelectedItem().ifPresent(item -> item.value().ifPresent(v -> {
-                    analyzeText.setVisible(true);
-                    trackValueButton.setVisible(true);
-                }));
+        datahandler.getSelectedItem().ifPresent(item -> {
+            item.value().ifPresent(v -> {
+                analyzeText.setVisible(true);
+                trackValueButton.setVisible(true);
+            });
+
+            if (item.childTopics() > 0) {
+                children.setVisible(true);
+            }
+        });
 
     }
 
