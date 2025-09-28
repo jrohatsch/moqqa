@@ -13,7 +13,7 @@ public interface Datahandler {
 
     void forgetMonitoredValues();
 
-    boolean addToMonitoredValues(String path, String item);
+    boolean monitorTopic(String path);
 
     boolean isMonitored(String topic);
 

@@ -1,19 +1,15 @@
 package com.github.jrohatsch.moqqa.ui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.ui.FlatArrowButton;
 import com.github.jrohatsch.moqqa.components.*;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.io.IOException;
 
 public class UserInterface {
@@ -23,8 +19,7 @@ public class UserInterface {
     private PathItemUpdater pathItemUpdater;
 
     private SearchPathUpdater searchPathUpdater;
-    private MonitoredValuesUpdater monitoredValuesUpdater;
-    private HistoryUpdater historyUpdater;
+    private AnalyzePage analyzePage;
     private PathItemInfo pathItemInfo;
 
     public UserInterface(Datahandler dataHandler) {
@@ -68,11 +63,11 @@ public class UserInterface {
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
-        historyUpdater = new HistoryUpdater(dataHandler);
+        analyzePage = new AnalyzePage(dataHandler);
         pathItemInfo = new PathItemInfo(dataHandler);
 
         tabbedPane.add("Info", pathItemInfo.init());
-        tabbedPane.add(TextUtils.getText("label.history"), historyUpdater.init());
+        tabbedPane.add(TextUtils.getText("label.history"), analyzePage.init());
         tabbedPane.add(TextUtils.getText("label.publish"), new Publisher(dataHandler).init());
         tabbedPane.add("Filter", new FilterPathItems(dataHandler).init());
 
@@ -145,6 +140,6 @@ public class UserInterface {
 
     public void start() {
         pathItemUpdater.execute();
-        historyUpdater.execute();
+        analyzePage.execute();
     }
 }

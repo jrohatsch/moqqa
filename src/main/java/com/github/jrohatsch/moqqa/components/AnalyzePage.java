@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HistoryUpdater extends SwingWorker<Void, Void> {
+public class AnalyzePage extends SwingWorker<Void, Void> {
     private final JTable values;
     private final DefaultTableModel valuesModel;
     private final Datahandler datahandler;
@@ -22,7 +22,7 @@ public class HistoryUpdater extends SwingWorker<Void, Void> {
     private JPanel monitoredIDs;
     private JPanel frame;
 
-    public HistoryUpdater(Datahandler datahandler) {
+    public AnalyzePage(Datahandler datahandler) {
         this.datahandler = datahandler;
         this.valuesModel = new DefaultTableModel() {
             @Override

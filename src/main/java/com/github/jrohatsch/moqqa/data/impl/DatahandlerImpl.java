@@ -180,19 +180,11 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
-    public boolean addToMonitoredValues(String path, String item) {
-        if (!path.isEmpty()) {
-            path = path.endsWith("/") ? path : path + "/";
-        }
-        int index = item.indexOf(" ");
-        if (index != -1) {
-            item = item.substring(0, index);
-        }
-        String key = path + item;
-        if (data.containsKey(key)) {
+    public boolean monitorTopic(String topic) {
+        if (data.containsKey(topic)) {
             var historicValues = new LinkedList<Message>();
-            historicValues.add(data.get(key));
-            monitored.put(key, historicValues);
+            historicValues.add(data.get(topic));
+            monitored.put(topic, historicValues);
             return true;
         } else {
             return false;
