@@ -9,11 +9,14 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.Objects;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 
 public class PathItemInfo implements SelectionObserver, PathObserver  {
     private final Datahandler datahandler;
     private final JLabel fullTopicText = new JLabel("Full Topic:");
     private final JLabel fullTopic = new JLabel();
+    private final JButton topicCopyButton = new JButton("Copy Topic");
     private final JLabel children = new JLabel();
     private final JLabel placeHolder = new JLabel("Select an item to inspect!");
     private String path = "";
@@ -39,6 +42,13 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
         panel.add(fullTopicText);
         fullTopicText.setFont(fullTopicText.getFont().deriveFont(Font.BOLD));
         panel.add(fullTopic);
+
+        topicCopyButton.addActionListener(l -> {
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(new StringSelection(fullTopic.getText()), null);
+        });
+
+        panel.add(topicCopyButton);
         topicSeparator = buildSeparator();
         panel.add(topicSeparator);
         panel.add(children);
@@ -80,6 +90,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
         placeHolder.setVisible(true);
         fullTopicText.setVisible(false);
         fullTopic.setVisible(false);
+        topicCopyButton.setVisible(false);
         children.setVisible(false);
         topicSeparator.setVisible(false);
         analyzeText.setVisible(false);
@@ -90,6 +101,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
         placeHolder.setVisible(false);
         fullTopicText.setVisible(true);
         fullTopic.setVisible(true);
+        topicCopyButton.setVisible(true);
         topicSeparator.setVisible(true);
 
         datahandler.getSelectedItem().ifPresent(item -> {
