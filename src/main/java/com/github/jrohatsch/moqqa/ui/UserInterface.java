@@ -8,6 +8,8 @@ import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -26,10 +28,18 @@ public class UserInterface {
         this.dataHandler = dataHandler;
     }
 
+    private void stepIntoSelection() {
+        PathListItem selection = pathItems.getSelectedValue();
+        if (selection.childTopics() > 0) {
+            searchPathUpdater.add(selection.topic());
+            pathItems.clearSelection();
+            dataHandler.setSearchPath(searchPathUpdater.getPath());
+        }
+    }
+
     public void setup() {
         FlatDarculaLaf.setup();
         frame = new JFrame();
-
 
         frame.setLayout(new BorderLayout());
 
@@ -38,16 +48,21 @@ public class UserInterface {
         pathItems = this.pathItemUpdater.init();
         pathItems.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
-                JList<PathListItem> list = (JList<PathListItem>) evt.getSource();
                 if (evt.getClickCount() == 2) {
-                    PathListItem selection = list.getSelectedValue();
-                    if (selection.childTopics() > 0) {
-                        searchPathUpdater.add(selection.topic());
-                        list.clearSelection();
-                        dataHandler.setSearchPath(searchPathUpdater.getPath());
-                    }
+                    stepIntoSelection();
                 }
             }
+        });
+
+        pathItems.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent keyEvent) {
+                System.out.printf("key pressed %d%n", keyEvent.getKeyCode());
+                if (keyEvent.getKeyCode() == 39) {
+                    stepIntoSelection();
+                }
+            }
+
         });
 
         dataHandler.registerPathObserver(pathItemUpdater);
@@ -78,13 +93,11 @@ public class UserInterface {
 
         frame.setFocusable(false);
 
-
         // search Path
         searchPathUpdater = new SearchPathUpdater(dataHandler);
         var toolbar = searchPathUpdater.getToolbar();
         var searchPathScroll = new JScrollPane();
         searchPathScroll.setViewportView(toolbar);
-
 
         frame.add(searchPathScroll, BorderLayout.NORTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

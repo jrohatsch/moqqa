@@ -61,7 +61,12 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
 
         trackValueButton = new JButton("Track value");
         trackValueButton.addActionListener(l -> {
-            datahandler.monitorTopic(fullTopic.getText());
+            String topic = fullTopic.getText();
+            if (datahandler.isMonitored(topic)) {
+                datahandler.forgetMonitoredValue(topic);
+            } else {
+                datahandler.monitorTopic(topic);
+            }
             show();
         });
 
@@ -108,13 +113,11 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
             item.value().ifPresent(v -> {
                 analyzeText.setVisible(true);
                 if (datahandler.isMonitored(fullTopic.getText())) {
-                    trackValueButton.setText("Already Tracked");
+                    trackValueButton.setText("Untrack value");
                     trackValueButton.setVisible(true);
-                    trackValueButton.setEnabled(false);
                 } else {
                     trackValueButton.setText("Track value");
                     trackValueButton.setVisible(true);
-                    trackValueButton.setEnabled(true);
                 }
             });
 
