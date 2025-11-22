@@ -69,9 +69,9 @@ public class DataHandlerTests {
         mqttConnector.mockMessage("level1/A", "value");
         mqttConnector.mockMessage("level1/B", "value");
         wait(Duration.ofMillis(10));
-        assertTrue(datahandler.addToMonitoredValues("", "level1"));
-        assertTrue(datahandler.addToMonitoredValues("level1", "A"));
-        assertTrue(datahandler.addToMonitoredValues("level1/", "B"));
+        assertTrue(datahandler.monitorTopic("level1"));
+        assertTrue(datahandler.monitorTopic("level1/A"));
+        assertTrue(datahandler.monitorTopic("level1/B"));
     }
 
     @Test
@@ -82,8 +82,8 @@ public class DataHandlerTests {
         wait(Duration.ofMillis(10));
 
         // after topics have initial values begin to monitor
-        assertTrue(datahandler.addToMonitoredValues("", "topic1"));
-        assertTrue(datahandler.addToMonitoredValues("", "topic2"));
+        assertTrue(datahandler.monitorTopic("topic1"));
+        assertTrue(datahandler.monitorTopic("topic2"));
 
         wait(Duration.ofMillis(10));
         mqttConnector.mockMessage("topic1", "C");

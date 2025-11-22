@@ -3,6 +3,7 @@ package com.github.jrohatsch.moqqa.data.impl;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.MqttConnector;
 import com.github.jrohatsch.moqqa.data.PathObserver;
+import com.github.jrohatsch.moqqa.data.SelectionObserver;
 import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 
@@ -21,9 +22,10 @@ public class DatahandlerImpl implements Datahandler {
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<>();
     private final List<PathObserver> pathObservers = new ArrayList<>();
+    private final List<SelectionObserver> selectionObserver = new ArrayList<>();
     private Predicate<Message> searchFilter = message -> true;
     private String searchPath = "";
-    private String selectedItem = "";
+    private PathListItem selectedItem;
 
     public DatahandlerImpl(MqttConnector mqttConnector) {
         this.mqttConnector = mqttConnector;
@@ -82,13 +84,24 @@ public class DatahandlerImpl implements Datahandler {
         pathObservers.add(observer);
     }
 
-    public String getSelectedItem() {
-        return selectedItem;
+    @Override
+    public Optional<PathListItem> getSelectedItem() {
+        return Optional.ofNullable(selectedItem);
     }
 
-    public void setSelectedItem(String selectedItem) {
+    public void setSelectedItem(PathListItem selectedItem) {
         System.out.println("set selected item to " + selectedItem);
         this.selectedItem = selectedItem;
+        if (selectedItem == null) {
+            selectionObserver.forEach(SelectionObserver::clear);
+        } else {
+            selectionObserver.forEach(o->o.update(selectedItem));
+        }
+    }
+
+    @Override
+    public void registerSelectionObserver(SelectionObserver observer) {
+        selectionObserver.add(observer);
     }
 
     @Override
@@ -153,7 +166,7 @@ public class DatahandlerImpl implements Datahandler {
 
     @Override
     public void monitorSelection() {
-        addToMonitoredValues(getSearchPath(), getSelectedItem());
+        //addToMonitoredValues(getSearchPath(), getSelectedItem());
     }
 
     @Override
@@ -167,19 +180,11 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
-    public boolean addToMonitoredValues(String path, String item) {
-        if (!path.isEmpty()) {
-            path = path.endsWith("/") ? path : path + "/";
-        }
-        int index = item.indexOf(" ");
-        if (index != -1) {
-            item = item.substring(0, index);
-        }
-        String key = path + item;
-        if (data.containsKey(key)) {
+    public boolean monitorTopic(String topic) {
+        if (data.containsKey(topic)) {
             var historicValues = new LinkedList<Message>();
-            historicValues.add(data.get(key));
-            monitored.put(key, historicValues);
+            historicValues.add(data.get(topic));
+            monitored.put(topic, historicValues);
             return true;
         } else {
             return false;
