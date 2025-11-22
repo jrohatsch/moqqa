@@ -5,6 +5,7 @@ import com.github.jrohatsch.moqqa.data.PathObserver;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 
 import javax.swing.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,7 +38,7 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
         clear();
     }
 
-    private void updatePathItems(Collection<PathListItem> updatedPaths) {
+    private void updatePathItems(Collection<PathListItem> updatedPaths) throws InterruptedException, InvocationTargetException {
         for (PathListItem updatedPath : updatedPaths) {
             int size = pathItemsModel.getSize();
             boolean updatedPathFoundInCurrentPaths = false;
@@ -49,15 +50,16 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
                         updatedPathFoundInCurrentPaths = true;
                         if (!eachPath.equals(updatedPath)) {
                             // update value
-                            pathItemsModel.setElementAt(updatedPath, i);
+                            int finalI = i;
+                            SwingUtilities.invokeAndWait(()-> pathItemsModel.setElementAt(updatedPath, finalI));
                         }
                     }
                 } catch (ArrayIndexOutOfBoundsException ignored) {
                     return;
                 }
             }
-            if (!updatedPathFoundInCurrentPaths) {
-                pathItemsModel.addElement(updatedPath);
+            if (!updatedPathFoundInCurrentPaths && pathItemsModel.getSize() < 100) {
+                SwingUtilities.invokeAndWait(() -> pathItemsModel.addElement(updatedPath));
             }
         }
         Iterator<PathListItem> iterator = pathItemsModel.elements().asIterator();
@@ -65,7 +67,7 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
             PathListItem displayed = iterator.next();
 
             if (!updatedPaths.contains(displayed)) {
-                pathItemsModel.removeElement(displayed);
+                SwingUtilities.invokeAndWait(() -> pathItemsModel.removeElement(displayed));
             }
         }
     }
