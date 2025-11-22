@@ -1,6 +1,7 @@
 package com.github.jrohatsch.moqqa.data.impl;
 
 import com.github.jrohatsch.moqqa.data.MqttConnector;
+import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.*;
 
@@ -111,5 +112,10 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
         } catch (MqttException e) {
             System.err.println(e);
         }
+    }
+
+    @Override
+    public void auth(MqttUsernamePassword credentials) {
+        setUserNameAndPassword(credentials.username(), credentials.password());
     }
 }
