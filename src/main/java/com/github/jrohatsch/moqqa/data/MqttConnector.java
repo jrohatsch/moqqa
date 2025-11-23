@@ -18,4 +18,6 @@ public interface MqttConnector {
     void publish(String topic, String message, boolean retained);
 
     void auth(MqttUsernamePassword credentials);
+
+    void auth(MqttServerCertificate credentials);
 }

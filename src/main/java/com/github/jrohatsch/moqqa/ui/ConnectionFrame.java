@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
+import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
 import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
@@ -42,8 +43,8 @@ public class ConnectionFrame {
         gc.gridy = 1;
         connectFrame.add(new JLabel(TextUtils.getText("label.auth")), gc);
 
-        String[] authChoices = new String[] {"Anonymous", "Username/Password"};
-        var authComboBox = new JComboBox<String>(authChoices);
+        String[] authChoices = new String[] {"Anonymous", "Username/Password", "Server Certificate"};
+        var authComboBox = new JComboBox<>(authChoices);
 
         gc.gridx = 1;
         connectFrame.add(authComboBox, gc);
@@ -87,6 +88,11 @@ public class ConnectionFrame {
                 userNameInput.setVisible(false);
                 passwordText.setVisible(false);
                 passwordInput.setVisible(false);
+            }
+
+            if (item.equals("Server Certificate")) {
+                // TODO get path from user submitted file
+                datahandler.connector().auth(new MqttServerCertificate("/home/user/Downloads/mosquitto.org.crt"));
             }
         });
 

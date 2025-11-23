@@ -51,14 +51,14 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
                         if (!eachPath.equals(updatedPath)) {
                             // update value
                             int finalI = i;
-                            SwingUtilities.invokeAndWait(()-> pathItemsModel.setElementAt(updatedPath, finalI));
+                            SwingUtilities.invokeAndWait(() -> pathItemsModel.setElementAt(updatedPath, finalI));
                         }
                     }
                 } catch (ArrayIndexOutOfBoundsException ignored) {
                     return;
                 }
             }
-            if (!updatedPathFoundInCurrentPaths && pathItemsModel.getSize() < 100) {
+            if (!updatedPathFoundInCurrentPaths && pathItemsModel.getSize() < Integer.MAX_VALUE) {
                 SwingUtilities.invokeAndWait(() -> pathItemsModel.addElement(updatedPath));
             }
         }
@@ -78,7 +78,6 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
             if (!doUpdate.get()) {
                 continue;
             }
-            Thread.sleep(100);
             Collection<PathListItem> updated = dataHandler.getPathItems(this.currentPath);
             try {
                 updatePathItems(updated);
