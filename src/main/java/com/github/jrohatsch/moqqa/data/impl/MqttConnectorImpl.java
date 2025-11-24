@@ -29,6 +29,7 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     }
 
     public void setCAFile(String path) throws Exception {
+        System.out.println("switching to ssl and using certificate " + path);
         protocol = "ssl";
         connectOptions.setSocketFactory(SpecificCertificateTrust.createCustomSSLFactory(path));
     }

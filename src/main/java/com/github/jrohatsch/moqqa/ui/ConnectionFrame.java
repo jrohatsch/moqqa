@@ -1,13 +1,15 @@
 package com.github.jrohatsch.moqqa.ui;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ItemEvent;
-
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
 import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ConnectionFrame {
     private final Datahandler datahandler;
@@ -43,7 +45,7 @@ public class ConnectionFrame {
         gc.gridy = 1;
         connectFrame.add(new JLabel(TextUtils.getText("label.auth")), gc);
 
-        String[] authChoices = new String[] {"Anonymous", "Username/Password", "Server Certificate"};
+        String[] authChoices = new String[]{"Anonymous", "Username/Password", "Server Certificate"};
         var authComboBox = new JComboBox<>(authChoices);
 
         gc.gridx = 1;
@@ -72,28 +74,43 @@ public class ConnectionFrame {
         passwordInput.setVisible(false);
         connectFrame.add(passwordInput, gc);
 
+        gc.gridx = 0;
+        gc.gridy = 2;
+        var serverCertificateText = new JLabel(TextUtils.getText("label.serverCertificate"));
+        serverCertificateText.setVisible(false);
+        connectFrame.add(serverCertificateText, gc);
+
+        gc.gridx = 1;
+        var serverCertificateButton = new JButton("Choose File");
+        AtomicReference<String> serverCertificatePath = new AtomicReference<>("");
+        serverCertificateButton.addActionListener((a) -> {
+            try {
+                var chooser = new JFileChooser();
+                chooser.setFileFilter(new FileNameExtensionFilter("Certificate Files (.crt, .der)", "crt", "der"));
+                chooser.showOpenDialog(connectFrame);
+                serverCertificatePath.set(chooser.getSelectedFile().getAbsolutePath());
+                serverCertificateButton.setText(chooser.getSelectedFile().getName());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        serverCertificateButton.setVisible(false);
+        connectFrame.add(serverCertificateButton, gc);
 
 
-        authComboBox.addItemListener((ItemEvent itemEvent)->{
+        authComboBox.addItemListener((ItemEvent itemEvent) -> {
             int index = authComboBox.getSelectedIndex();
             String item = authChoices[index];
 
-            if (item.equals("Username/Password")) {
-                userNameText.setVisible(true);
-                userNameInput.setVisible(true);
-                passwordText.setVisible(true);
-                passwordInput.setVisible(true);
-            } else {
-                userNameText.setVisible(false);
-                userNameInput.setVisible(false);
-                passwordText.setVisible(false);
-                passwordInput.setVisible(false);
-            }
+            boolean useUsernamePassword = item.equals("Username/Password");
+            userNameText.setVisible(useUsernamePassword);
+            userNameInput.setVisible(useUsernamePassword);
+            passwordText.setVisible(useUsernamePassword);
+            passwordInput.setVisible(useUsernamePassword);
 
-            if (item.equals("Server Certificate")) {
-                // TODO get path from user submitted file
-                datahandler.connector().auth(new MqttServerCertificate("/home/user/Downloads/mosquitto.org.crt"));
-            }
+            boolean useServerCertificate = item.equals("Server Certificate");
+            serverCertificateText.setVisible(useServerCertificate);
+            serverCertificateButton.setVisible(useServerCertificate);
         });
 
 
@@ -107,6 +124,10 @@ public class ConnectionFrame {
                 datahandler.connector().auth(new MqttUsernamePassword(userNameInput.getText(), passwordInput.getText()));
             }
 
+            if (authChoices[authComboBox.getSelectedIndex()].equals("Server Certificate")) {
+                datahandler.connector().auth(new MqttServerCertificate(serverCertificatePath.get()));
+            }
+
             boolean connected = datahandler.connector().connect(address.getText());
             if (connected) {
                 onConnect.run();
@@ -116,7 +137,7 @@ public class ConnectionFrame {
             // now enable again
             connectButton.setEnabled(true);
         });
-        
+
         return connectFrame;
     }
 }
