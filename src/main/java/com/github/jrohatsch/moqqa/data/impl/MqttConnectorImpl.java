@@ -1,28 +1,37 @@
 package com.github.jrohatsch.moqqa.data.impl;
 
+import com.github.jrohatsch.moqqa.components.SpecificCertificateTrust;
 import com.github.jrohatsch.moqqa.data.MqttConnector;
+import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
+import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.*;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Properties;
 import java.util.function.Consumer;
 
 
 public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     private IMqttAsyncClient client;
-    private MqttConnectOptions connectOptions = new MqttConnectOptions();
+    private final MqttConnectOptions connectOptions = new MqttConnectOptions();
     private Consumer<Message> messageConsumer;
+    private String protocol = "tcp";
 
     @Override
     public IMqttAsyncClient getClient(String url) throws MqttException {
-        return new MqttAsyncClient("tcp://" + url, "Moqqa");
+        return new MqttAsyncClient(protocol + "://" + url, "Moqqa");
     }
 
     public void setUserNameAndPassword(String username, String password) {
         connectOptions.setUserName(username);
         connectOptions.setPassword(password.toCharArray());
+    }
+
+    public void setCAFile(String path) throws Exception {
+        System.out.println("switching to ssl and using certificate " + path);
+        protocol = "ssl";
+        connectOptions.setSocketFactory(SpecificCertificateTrust.createCustomSSLFactory(path));
     }
 
     @Override
@@ -110,6 +119,20 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
             }
         } catch (MqttException e) {
             System.err.println(e);
+        }
+    }
+
+    @Override
+    public void auth(MqttUsernamePassword credentials) {
+        setUserNameAndPassword(credentials.username(), credentials.password());
+    }
+
+    @Override
+    public void auth(MqttServerCertificate credentials) {
+        try {
+            setCAFile(credentials.path());
+        } catch (Exception ignored) {
+
         }
     }
 }

@@ -113,42 +113,12 @@ public class UserInterface {
     }
 
     private JFrame createWelcomeFrame() throws IOException {
-        var connectFrame = new JFrame();
-
-        connectFrame.setTitle("Moqqa: %s".formatted(TextUtils.getText("label.connectOptions")));
-        connectFrame.setLayout(new GridBagLayout());
-        connectFrame.setSize(400, 250);
-
-        var gc = new GridBagConstraints();
-        gc.insets = new Insets(5, 5, 5, 5);
-        gc.gridx = 0;
-        connectFrame.add(new JLabel(TextUtils.getText("label.mqttAddress")), gc);
-        gc.gridx = 1;
-        var address = new JTextField("localhost:1883", 15);
-        connectFrame.add(address, gc);
-
-        var connectButton = new JButton(TextUtils.getText("button.connect"));
-
-        connectButton.addActionListener(action -> {
-            // first disable connect button
-            connectButton.setEnabled(false);
-            boolean connected = dataHandler.connector().connect(address.getText());
-            if (connected) {
+        return new ConnectionFrame(dataHandler, ()->{
                 pathItemUpdater.start();
-                connectFrame.setVisible(false);
-                frame.setTitle("Moqqa: " + address.getText());
+                frame.setTitle("Moqqa");
                 frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 frame.setVisible(true);
-            } else {
-                System.out.println("Could not connect");
-            }
-            // now enable again
-            connectButton.setEnabled(true);
-        });
-
-        gc.gridx = 2;
-        connectFrame.add(connectButton, gc);
-        return connectFrame;
+        }).get();
     }
 
     public void start() {

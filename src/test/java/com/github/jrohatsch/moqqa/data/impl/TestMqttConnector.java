@@ -1,6 +1,7 @@
 package com.github.jrohatsch.moqqa.data.impl;
 
 import com.github.jrohatsch.moqqa.data.MqttConnector;
+import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.mockito.Mockito;
@@ -37,5 +38,10 @@ class TestMqttConnector implements MqttConnector {
 
     public void mockMessage(String topic, String value) {
         messageConsumer.accept(Message.of(topic, value));
+    }
+
+    @Override
+    public void auth(MqttUsernamePassword credentials) {
+       
     }
 }
