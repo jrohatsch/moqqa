@@ -1,6 +1,7 @@
 package com.github.jrohatsch.moqqa.data.impl;
 
 import com.github.jrohatsch.moqqa.data.MqttConnector;
+import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
 import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
@@ -43,5 +44,10 @@ class TestMqttConnector implements MqttConnector {
     @Override
     public void auth(MqttUsernamePassword credentials) {
        
+    }
+
+    @Override
+    public void auth(MqttServerCertificate credentials) {
+
     }
 }

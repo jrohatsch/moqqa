@@ -122,7 +122,7 @@ public class UserInterface {
     }
 
     public void start() {
-        pathItemUpdater.execute();
+        pathItemUpdater.start();
         analyzePage.execute();
     }
 }

@@ -8,17 +8,18 @@ import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>, DefaultListModel<PathListItem>> implements PathObserver {
+public class PathItemUpdater implements PathObserver {
     private final Datahandler dataHandler;
-    private final AtomicBoolean doUpdate;
     private DefaultListModel<PathListItem> pathItemsModel;
     private String currentPath = "";
+    private ScheduledExecutorService executor;
 
     public PathItemUpdater(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
-        this.doUpdate = new AtomicBoolean(false);
     }
 
     public JList<PathListItem> init() {
@@ -72,18 +73,15 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
         }
     }
 
-    @Override
-    protected DefaultListModel<PathListItem> doInBackground() throws InterruptedException {
-        while (true) {
-            if (!doUpdate.get()) {
-                continue;
-            }
+    protected void update() {
             Collection<PathListItem> updated = dataHandler.getPathItems(this.currentPath);
-            try {
-                updatePathItems(updated);
-            } catch (Exception ignored) {
-                System.err.println("error updading pathItems");
-            }
+        try {
+            updatePathItems(updated);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.out.println("update thread interrupted");
+        } catch (InvocationTargetException e) {
+            System.err.println(e);
         }
     }
 
@@ -96,10 +94,19 @@ public class PathItemUpdater extends SwingWorker<DefaultListModel<PathListItem>,
     }
 
     public void start() {
-        doUpdate.set(true);
+        stop();
+        executor = Executors.newSingleThreadScheduledExecutor();
+        executor.scheduleWithFixedDelay(this::update,1, 1, TimeUnit.MILLISECONDS);
     }
 
     public void stop() {
-        doUpdate.set(false);
+        if(executor != null) {
+            executor.shutdownNow();
+            try {
+                executor.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {
+                System.err.println("could not stop update thread in time");
+            }
+        }
     }
 }
