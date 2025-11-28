@@ -1,128 +1,75 @@
 package com.github.jrohatsch.moqqa.ui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
-import com.github.jrohatsch.moqqa.components.*;
 import com.github.jrohatsch.moqqa.data.Datahandler;
-import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 
 public class UserInterface {
     private final Datahandler dataHandler;
     private JFrame frame;
-    private JList<PathListItem> pathItems;
-    private PathItemUpdater pathItemUpdater;
-
-    private SearchPathUpdater searchPathUpdater;
-    private AnalyzePage analyzePage;
-    private PathItemInfo pathItemInfo;
+    private ConnectionPanel connectionPanel;
+    private MainPanel mainPanel;
+    private PanelType activePanel;
 
     public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
     }
 
-    private void stepIntoSelection() {
-        PathListItem selection = pathItems.getSelectedValue();
-        if (selection.childTopics() > 0) {
-            searchPathUpdater.add(selection.topic());
-            pathItems.clearSelection();
-            dataHandler.setSearchPath(searchPathUpdater.getPath());
-        }
-    }
 
-    public void setup() {
+    public void show() {
         FlatDarculaLaf.setup();
+
         frame = new JFrame();
 
-        frame.setLayout(new BorderLayout());
+        addConnectionPanel();
 
-        // split pane
-        this.pathItemUpdater = new PathItemUpdater(dataHandler);
-        pathItems = this.pathItemUpdater.init();
-        pathItems.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent evt) {
-                if (evt.getClickCount() == 2) {
-                    stepIntoSelection();
-                }
-            }
-        });
-
-        pathItems.addKeyListener(new KeyAdapter() {
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
             @Override
-            public void keyReleased(KeyEvent keyEvent) {
-                System.out.printf("key pressed %d%n", keyEvent.getKeyCode());
-                if (keyEvent.getKeyCode() == 39) {
-                    stepIntoSelection();
+            public void windowClosing(WindowEvent e)
+            {
+                if (activePanel == PanelType.MAIN) {
+                    mainPanel.setVisible(false);
+                    mainPanel.stop();
+                    addConnectionPanel();
+                } else {
+                    e.getWindow().dispose();
+                    System.exit(0);
                 }
             }
-
         });
-
-        dataHandler.registerPathObserver(pathItemUpdater);
-
-        var pathItemsPane = new JScrollPane();
-        pathItemsPane.setViewportView(pathItems);
-        pathItems.setLayoutOrientation(JList.VERTICAL);
-
-        pathItems.addListSelectionListener(e -> {
-            var selectedItem = pathItems.getSelectedValue();
-            dataHandler.setSelectedItem(selectedItem);
-        });
-
-        JTabbedPane tabbedPane = new JTabbedPane();
-
-        analyzePage = new AnalyzePage(dataHandler);
-        pathItemInfo = new PathItemInfo(dataHandler);
-
-        tabbedPane.add("Info", pathItemInfo.init());
-        tabbedPane.add(TextUtils.getText("label.history"), analyzePage.init());
-        tabbedPane.add(TextUtils.getText("label.publish"), new Publisher(dataHandler).init());
-        tabbedPane.add("Filter", new FilterPathItems(dataHandler).init());
-
-        var splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pathItemsPane, tabbedPane);
-
-        splitPane.setResizeWeight(0.8);
-        frame.add(splitPane, BorderLayout.CENTER);
-
-        frame.setFocusable(false);
-
-        // search Path
-        searchPathUpdater = new SearchPathUpdater(dataHandler);
-        var toolbar = searchPathUpdater.getToolbar();
-        var searchPathScroll = new JScrollPane();
-        searchPathScroll.setViewportView(toolbar);
-
-        frame.add(searchPathScroll, BorderLayout.NORTH);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        frame.setSize(500, 500);
     }
 
-    public void show() throws IOException {
-        JFrame welcomeFrame = createWelcomeFrame();
-
-        welcomeFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        welcomeFrame.setVisible(true);
+    private void addConnectionPanel() {
+        connectionPanel = new ConnectionPanel(dataHandler);
+        frame.add(connectionPanel.get());
+        frame.setTitle("Moqqa: %s".formatted(TextUtils.getText("label.connectOptions")));
+        activePanel = PanelType.CONNECTION;
     }
 
-    private JFrame createWelcomeFrame() throws IOException {
-        return new ConnectionFrame(dataHandler, ()->{
-                pathItemUpdater.start();
-                frame.setTitle("Moqqa");
-                frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                frame.setVisible(true);
-        }).get();
+    private void addMainPanel() {
+        mainPanel = new MainPanel(dataHandler);
+        frame.add(mainPanel.get());
+        activePanel = PanelType.MAIN;
     }
 
     public void start() {
-        pathItemUpdater.start();
-        analyzePage.execute();
+        mainPanel.start();
+    }
+
+    public void waitForConnection() throws InterruptedException {
+        while (!connectionPanel.connected()) {
+            Thread.sleep(1_000);
+        }
+        connectionPanel.setVisible(false);
+        addMainPanel();
+        frame.setVisible(true);
     }
 }

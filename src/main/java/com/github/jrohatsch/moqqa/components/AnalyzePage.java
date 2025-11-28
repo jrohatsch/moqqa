@@ -114,6 +114,9 @@ public class AnalyzePage extends SwingWorker<Void, Void> {
         }
     }
 
+    public void stop() {
+        update.set(false);
+    }
 
     @Override
     protected Void doInBackground() {

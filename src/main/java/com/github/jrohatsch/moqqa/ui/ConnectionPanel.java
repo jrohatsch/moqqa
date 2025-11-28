@@ -11,74 +11,72 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ConnectionFrame {
+public class ConnectionPanel {
     private final Datahandler datahandler;
-    private final Runnable onConnect;
+    private JPanel panel;
 
-    public ConnectionFrame(Datahandler datahandler, Runnable onConnect) {
+    private boolean isConnected;
+
+    public ConnectionPanel(Datahandler datahandler) {
         this.datahandler = datahandler;
-        this.onConnect = onConnect;
     }
 
 
-    public JFrame get() {
-        JFrame connectFrame = new JFrame();
-
-        connectFrame.setTitle("Moqqa: %s".formatted(TextUtils.getText("label.connectOptions")));
-        connectFrame.setLayout(new GridBagLayout());
-        connectFrame.setSize(400, 250);
+    public JPanel get() {
+        panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
 
         var gc = new GridBagConstraints();
         gc.insets = new Insets(20, 5, 20, 5);
         gc.gridx = 0;
-        connectFrame.add(new JLabel(TextUtils.getText("label.mqttAddress")), gc);
+        panel.add(new JLabel(TextUtils.getText("label.mqttAddress")), gc);
         gc.gridx = 1;
         var address = new JTextField("localhost:1883", 15);
-        connectFrame.add(address, gc);
+        panel.add(address, gc);
 
         var connectButton = new JButton(TextUtils.getText("button.connect"));
 
         gc.gridx = 2;
-        connectFrame.add(connectButton, gc);
+        panel.add(connectButton, gc);
 
         gc.gridx = 0;
         gc.gridy = 1;
-        connectFrame.add(new JLabel(TextUtils.getText("label.auth")), gc);
+        panel.add(new JLabel(TextUtils.getText("label.auth")), gc);
 
         String[] authChoices = new String[]{"Anonymous", "Username/Password", "Server Certificate"};
         var authComboBox = new JComboBox<>(authChoices);
 
         gc.gridx = 1;
-        connectFrame.add(authComboBox, gc);
+        panel.add(authComboBox, gc);
 
 
         gc.gridx = 0;
         gc.gridy = 2;
         var userNameText = new JLabel(TextUtils.getText("label.username"));
         userNameText.setVisible(false);
-        connectFrame.add(userNameText, gc);
+        panel.add(userNameText, gc);
 
         gc.gridx = 1;
         var userNameInput = new JTextField("", 15);
         userNameInput.setVisible(false);
-        connectFrame.add(userNameInput, gc);
+        panel.add(userNameInput, gc);
 
         gc.gridx = 0;
         gc.gridy = 3;
         var passwordText = new JLabel(TextUtils.getText("label.password"));
         passwordText.setVisible(false);
-        connectFrame.add(passwordText, gc);
+        panel.add(passwordText, gc);
 
         gc.gridx = 1;
         var passwordInput = new JTextField("", 15);
         passwordInput.setVisible(false);
-        connectFrame.add(passwordInput, gc);
+        panel.add(passwordInput, gc);
 
         gc.gridx = 0;
         gc.gridy = 2;
         var serverCertificateText = new JLabel(TextUtils.getText("label.serverCertificate"));
         serverCertificateText.setVisible(false);
-        connectFrame.add(serverCertificateText, gc);
+        panel.add(serverCertificateText, gc);
 
         gc.gridx = 1;
         var serverCertificateButton = new JButton("Choose File");
@@ -87,7 +85,7 @@ public class ConnectionFrame {
             try {
                 var chooser = new JFileChooser();
                 chooser.setFileFilter(new FileNameExtensionFilter("Certificate Files (.crt, .der)", "crt", "der"));
-                chooser.showOpenDialog(connectFrame);
+                chooser.showOpenDialog(panel);
                 serverCertificatePath.set(chooser.getSelectedFile().getAbsolutePath());
                 serverCertificateButton.setText(chooser.getSelectedFile().getName());
             } catch (Exception e) {
@@ -95,7 +93,7 @@ public class ConnectionFrame {
             }
         });
         serverCertificateButton.setVisible(false);
-        connectFrame.add(serverCertificateButton, gc);
+        panel.add(serverCertificateButton, gc);
 
 
         authComboBox.addItemListener((ItemEvent itemEvent) -> {
@@ -130,7 +128,7 @@ public class ConnectionFrame {
 
             boolean connected = datahandler.connector().connect(address.getText());
             if (connected) {
-                onConnect.run();
+                isConnected = true;
             } else {
                 System.out.println("Could not connect");
             }
@@ -138,6 +136,14 @@ public class ConnectionFrame {
             connectButton.setEnabled(true);
         });
 
-        return connectFrame;
+        return panel;
+    }
+
+    public boolean connected() {
+        return isConnected;
+    }
+
+    public void setVisible(boolean visible) {
+        panel.setVisible(visible);
     }
 }

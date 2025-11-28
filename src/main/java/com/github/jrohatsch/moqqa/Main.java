@@ -8,13 +8,13 @@ import java.io.IOException;
 
 class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         MqttConnectorImpl mqttConnector = new MqttConnectorImpl();
         DatahandlerImpl dataHandler = new DatahandlerImpl(mqttConnector);
         UserInterface userInterface = new UserInterface(dataHandler);
 
-        userInterface.setup();
         userInterface.show();
+        userInterface.waitForConnection();
         userInterface.start();
     }
 }
