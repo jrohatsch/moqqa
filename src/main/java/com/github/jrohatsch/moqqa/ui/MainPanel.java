@@ -112,5 +112,7 @@ public class MainPanel {
     public void stop() {
         pathItemUpdater.stop();
         analyzePage.stop();
+        dataHandler.connector().disconnect();
+        dataHandler.clear();
     }
 }

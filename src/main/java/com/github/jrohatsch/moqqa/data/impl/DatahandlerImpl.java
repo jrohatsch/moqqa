@@ -165,11 +165,6 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
-    public void monitorSelection() {
-        //addToMonitoredValues(getSearchPath(), getSelectedItem());
-    }
-
-    @Override
     public MqttConnector connector() {
         return mqttConnector;
     }
@@ -197,16 +192,16 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
-    public List<Message> getMonitoredValues() {
-        return monitored.keySet().stream().map(data::get).collect(Collectors.toList());
-    }
-
-    @Override
     public List<Message> getHistoricValues() {
         ArrayList<Message> output = new ArrayList<>();
         monitored.values().stream().flatMap(Collection::stream).forEach(output::add);
         output.sort(Comparator.comparing(Message::time));
         return output;
+    }
+
+    @Override
+    public void clear() {
+        data.clear();
     }
 
 }

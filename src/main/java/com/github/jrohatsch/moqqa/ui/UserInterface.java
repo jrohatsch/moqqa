@@ -7,7 +7,8 @@ import com.github.jrohatsch.moqqa.utils.TextUtils;
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class UserInterface {
     private final Datahandler dataHandler;
@@ -15,6 +16,7 @@ public class UserInterface {
     private ConnectionPanel connectionPanel;
     private MainPanel mainPanel;
     private PanelType activePanel;
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
@@ -48,28 +50,32 @@ public class UserInterface {
     }
 
     private void addConnectionPanel() {
-        connectionPanel = new ConnectionPanel(dataHandler);
+        connectionPanel = new ConnectionPanel(dataHandler, this::waitForConnection);
         frame.add(connectionPanel.get());
         frame.setTitle("Moqqa: %s".formatted(TextUtils.getText("label.connectOptions")));
         activePanel = PanelType.CONNECTION;
+        executorService.submit(this::waitForConnection);
     }
 
     private void addMainPanel() {
         mainPanel = new MainPanel(dataHandler);
         frame.add(mainPanel.get());
+        frame.setTitle("Moqqa: %s".formatted(dataHandler.connector().getAddress()));
         activePanel = PanelType.MAIN;
     }
 
-    public void start() {
-        mainPanel.start();
-    }
 
-    public void waitForConnection() throws InterruptedException {
+    public void waitForConnection() {
         while (!connectionPanel.connected()) {
-            Thread.sleep(1_000);
+            try {
+                Thread.sleep(1_000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
         connectionPanel.setVisible(false);
         addMainPanel();
         frame.setVisible(true);
+        mainPanel.start();
     }
 }

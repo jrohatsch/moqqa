@@ -17,11 +17,7 @@ public interface Datahandler {
 
     boolean isMonitored(String topic);
 
-    List<Message> getMonitoredValues();
-
     Collection<PathListItem> getPathItems(String path);
-
-    void monitorSelection();
 
     void setSearchPath(String path);
 
@@ -37,4 +33,6 @@ public interface Datahandler {
     void forgetMonitoredValue(String topic);
 
     List<Message> getHistoricValues();
+
+    void clear();
 }

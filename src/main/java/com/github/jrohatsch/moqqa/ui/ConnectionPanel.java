@@ -14,11 +14,13 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ConnectionPanel {
     private final Datahandler datahandler;
     private JPanel panel;
+    private final Runnable onConnect;
 
     private boolean isConnected;
 
-    public ConnectionPanel(Datahandler datahandler) {
+    public ConnectionPanel(Datahandler datahandler, Runnable onConnect) {
         this.datahandler = datahandler;
+        this.onConnect = onConnect;
     }
 
 

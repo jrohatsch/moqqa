@@ -50,4 +50,9 @@ class TestMqttConnector implements MqttConnector {
     public void auth(MqttServerCertificate credentials) {
 
     }
+
+    @Override
+    public String getAddress() {
+        return "tcp://localhost:1883";
+    }
 }

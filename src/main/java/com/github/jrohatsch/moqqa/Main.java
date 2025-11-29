@@ -14,7 +14,5 @@ class Main {
         UserInterface userInterface = new UserInterface(dataHandler);
 
         userInterface.show();
-        userInterface.waitForConnection();
-        userInterface.start();
     }
 }

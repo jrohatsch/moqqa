@@ -14,13 +14,15 @@ import java.util.function.Consumer;
 
 public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     private IMqttAsyncClient client;
-    private final MqttConnectOptions connectOptions = new MqttConnectOptions();
+    private MqttConnectOptions connectOptions = new MqttConnectOptions();
     private Consumer<Message> messageConsumer;
     private String protocol = "tcp";
+    private String address = "";
 
     @Override
     public IMqttAsyncClient getClient(String url) throws MqttException {
-        return new MqttAsyncClient(protocol + "://" + url, "Moqqa");
+        address = "%s://%s".formatted(protocol, url);
+        return new MqttAsyncClient(address, "Moqqa");
     }
 
     public void setUserNameAndPassword(String username, String password) {
@@ -108,6 +110,10 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     public void disconnect() {
         try {
             client.disconnect();
+            connectOptions = new MqttConnectOptions();
+            address = "";
+            protocol = "tcp";
+
 
             while (client.isConnected()) {
                 try {
@@ -134,5 +140,10 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
         } catch (Exception ignored) {
 
         }
+    }
+
+    @Override
+    public String getAddress() {
+        return address;
     }
 }

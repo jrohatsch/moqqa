@@ -20,4 +20,6 @@ public interface MqttConnector {
     void auth(MqttUsernamePassword credentials);
 
     void auth(MqttServerCertificate credentials);
+
+    String getAddress();
 }
