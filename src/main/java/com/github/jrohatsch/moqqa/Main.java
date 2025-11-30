@@ -8,11 +8,11 @@ import java.io.IOException;
 
 class Main {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) {
         MqttConnectorImpl mqttConnector = new MqttConnectorImpl();
         DatahandlerImpl dataHandler = new DatahandlerImpl(mqttConnector);
         UserInterface userInterface = new UserInterface(dataHandler);
-
+        //userInterface.setFontSize(100);
         userInterface.show();
     }
 }

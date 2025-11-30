@@ -97,6 +97,11 @@ public class MainPanel {
 
         panel.add(searchPathScroll, BorderLayout.NORTH);
 
+        var bottomToolbar = new JMenuBar();
+        bottomToolbar.add(new SettingsButton(panel));
+
+        panel.add(bottomToolbar, BorderLayout.SOUTH);
+
         return panel;
     }
 
