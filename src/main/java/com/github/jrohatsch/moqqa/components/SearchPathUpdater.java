@@ -67,6 +67,7 @@ public class SearchPathUpdater {
 
         final int index = path.getComponentCount();
         button.addActionListener(action -> stepToIndex(index));
+        button.setFont(path.getFont());
         path.add(button);
         path.updateUI();
     }
