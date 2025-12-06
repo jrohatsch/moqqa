@@ -9,6 +9,9 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ItemEvent;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ConnectionPanel {
@@ -17,6 +20,7 @@ public class ConnectionPanel {
     private final Runnable onConnect;
 
     private boolean isConnected;
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public ConnectionPanel(Datahandler datahandler, Runnable onConnect) {
         this.datahandler = datahandler;
@@ -113,10 +117,22 @@ public class ConnectionPanel {
             serverCertificateButton.setVisible(useServerCertificate);
         });
 
+        AtomicReference<Color> oldColor = new AtomicReference<>();
 
         connectButton.addActionListener(action -> {
-            // first disable connect button
-            connectButton.setEnabled(false);
+
+            if (connectButton.getText().equals("Cancel")) {
+                executorService.shutdownNow();
+                try {
+                    executorService.awaitTermination(10, TimeUnit.SECONDS);
+                } catch (InterruptedException ignored) {
+                    System.err.println("could not stop connection thread in time");
+                }
+                connectButton.setText(TextUtils.getText("button.connect"));
+                connectButton.setBackground(oldColor.get());
+                executorService = Executors.newSingleThreadExecutor();
+                return;
+            }
 
             // check authentication
             if (authChoices[authComboBox.getSelectedIndex()].equals("Username/Password")) {
@@ -128,14 +144,18 @@ public class ConnectionPanel {
                 datahandler.connector().auth(new MqttServerCertificate(serverCertificatePath.get()));
             }
 
-            boolean connected = datahandler.connector().connect(address.getText());
-            if (connected) {
-                isConnected = true;
-            } else {
-                System.out.println("Could not connect");
-            }
-            // now enable again
-            connectButton.setEnabled(true);
+            executorService.submit(() -> {
+                boolean connected = datahandler.connector().connect(address.getText());
+                if (connected) {
+                    isConnected = true;
+                } else {
+                    System.out.println("Could not connect");
+                }
+            });
+
+            connectButton.setText("Cancel");
+            oldColor.set(connectButton.getBackground());
+            connectButton.setBackground(Color.RED);
         });
 
         return panel;
