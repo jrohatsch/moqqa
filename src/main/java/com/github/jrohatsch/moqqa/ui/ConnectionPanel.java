@@ -3,6 +3,7 @@ package com.github.jrohatsch.moqqa.ui;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
 import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
+import com.github.jrohatsch.moqqa.utils.ColorUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
@@ -40,7 +41,7 @@ public class ConnectionPanel {
         var address = new JTextField("localhost:1883", 15);
         panel.add(address, gc);
 
-        var connectButton = new JButton(TextUtils.getText("button.connect"));
+        var connectButton = new TwoStateButton(TextUtils.getText("button.connect"),TextUtils.getText("button.cancel"));
 
         gc.gridx = 2;
         panel.add(connectButton, gc);
@@ -117,23 +118,7 @@ public class ConnectionPanel {
             serverCertificateButton.setVisible(useServerCertificate);
         });
 
-        AtomicReference<Color> oldColor = new AtomicReference<>();
-
-        connectButton.addActionListener(action -> {
-
-            if (connectButton.getText().equals("Cancel")) {
-                executorService.shutdownNow();
-                try {
-                    executorService.awaitTermination(10, TimeUnit.SECONDS);
-                } catch (InterruptedException ignored) {
-                    System.err.println("could not stop connection thread in time");
-                }
-                connectButton.setText(TextUtils.getText("button.connect"));
-                connectButton.setBackground(oldColor.get());
-                executorService = Executors.newSingleThreadExecutor();
-                return;
-            }
-
+        connectButton.addCallback(0,()->{
             // check authentication
             if (authChoices[authComboBox.getSelectedIndex()].equals("Username/Password")) {
                 System.out.println("Using password/username");
@@ -152,10 +137,16 @@ public class ConnectionPanel {
                     System.out.println("Could not connect");
                 }
             });
+        });
 
-            connectButton.setText("Cancel");
-            oldColor.set(connectButton.getBackground());
-            connectButton.setBackground(Color.RED);
+        connectButton.addCallback(1, () -> {
+            executorService.shutdownNow();
+            try {
+                executorService.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {
+                System.err.println("could not stop connection thread in time");
+            }
+            executorService = Executors.newSingleThreadExecutor();
         });
 
         return panel;
