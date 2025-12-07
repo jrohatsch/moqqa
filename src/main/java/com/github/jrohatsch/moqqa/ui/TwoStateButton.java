@@ -19,7 +19,7 @@ public class TwoStateButton extends JButton {
         states[1] = stateB;
         callbacks = new Runnable[2];
         colors = new Color[2];
-        colors[0] = ColorUtils.rgb(75, 149, 255);
+        colors[0] = ColorUtils.rgb(64, 111, 180);
         colors[1] = Color.DARK_GRAY;
         selectedState = 0;
         setBackground(colors[0]);
