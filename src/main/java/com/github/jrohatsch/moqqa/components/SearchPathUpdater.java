@@ -56,7 +56,7 @@ public class SearchPathUpdater {
     }
 
     public void add(String subPath, String tooltipText) {
-        if (path.getComponentCount() > 1) {
+        if (path.getComponentCount() > 0) {
             path.addSeparator();
         }
         var button = new SearchPathButton(subPath);
@@ -74,5 +74,16 @@ public class SearchPathUpdater {
 
     public JToolBar getToolbar() {
         return path;
+    }
+
+    public void pop() {
+        if (path.getComponentCount() >= 3) {
+            // remove last button and separator
+            path.remove(path.getComponentCount() - 1);
+            path.remove(path.getComponentCount() - 1);
+            path.updateUI();
+        } else {
+            System.out.println("already at root level!");
+        }
     }
 }

@@ -61,6 +61,17 @@ public class MainPanel {
 
         });
 
+        pathItems.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent keyEvent) {
+                System.out.printf("key pressed %d%n", keyEvent.getKeyCode());
+                if (keyEvent.getKeyCode() == 37) {
+                    stepUp();
+                }
+            }
+
+        });
+
         dataHandler.registerPathObserver(pathItemUpdater);
 
         var pathItemsPane = new JScrollPane();
@@ -103,6 +114,12 @@ public class MainPanel {
         panel.add(bottomToolbar, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    private void stepUp() {
+        searchPathUpdater.pop();
+        pathItems.clearSelection();
+        dataHandler.setSearchPath(searchPathUpdater.getPath());
     }
 
     public void start() {
