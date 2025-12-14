@@ -3,6 +3,9 @@ package com.github.jrohatsch.moqqa.ui;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
 import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
+import com.github.jrohatsch.moqqa.session.Session;
+import com.github.jrohatsch.moqqa.session.SessionHandler;
+import com.github.jrohatsch.moqqa.session.impl.JsonSessionHandler;
 import com.github.jrohatsch.moqqa.utils.ColorUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
@@ -19,6 +22,7 @@ public class ConnectionPanel {
     private final Datahandler datahandler;
     private JPanel panel;
     private final Runnable onConnect;
+    private SessionHandler sessionHandler;
 
     private boolean isConnected;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -26,6 +30,7 @@ public class ConnectionPanel {
     public ConnectionPanel(Datahandler datahandler, Runnable onConnect) {
         this.datahandler = datahandler;
         this.onConnect = onConnect;
+        this.sessionHandler = new JsonSessionHandler();
     }
 
 
@@ -35,57 +40,83 @@ public class ConnectionPanel {
 
         var gc = new GridBagConstraints();
         gc.insets = new Insets(20, 5, 20, 5);
+
         gc.gridx = 0;
-        panel.add(new JLabel(TextUtils.getText("label.mqttAddress")), gc);
+        gc.gridy = 0;
+        panel.add(new JLabel("Session Name:"), gc);
+
+        var sessionName = new JTextField("New Session", 15);
+
         gc.gridx = 1;
+        gc.gridy = 0;
+        panel.add(sessionName, gc);
+
+        var sessionSave = new JButton("Save");
+
+        gc.gridx = 2;
+        gc.gridy = 0;
+        panel.add(sessionSave, gc);
+
+        gc.gridx = 0;
+        gc.gridy = 1;
+        panel.add(new JLabel(TextUtils.getText("label.mqttAddress")), gc);
+
         var address = new JTextField("localhost:1883", 15);
+
+        gc.gridx = 1;
+        gc.gridy = 1;
         panel.add(address, gc);
 
         var connectButton = new TwoStateButton(TextUtils.getText("button.connect"),TextUtils.getText("button.cancel"));
 
         gc.gridx = 2;
+        gc.gridy = 1;
         panel.add(connectButton, gc);
 
         gc.gridx = 0;
-        gc.gridy = 1;
+        gc.gridy = 2;
         panel.add(new JLabel(TextUtils.getText("label.auth")), gc);
 
         String[] authChoices = new String[]{"Anonymous", "Username/Password", "Server Certificate"};
         var authComboBox = new JComboBox<>(authChoices);
 
         gc.gridx = 1;
+        gc.gridy = 2;
         panel.add(authComboBox, gc);
 
 
         gc.gridx = 0;
-        gc.gridy = 2;
+        gc.gridy = 3;
         var userNameText = new JLabel(TextUtils.getText("label.username"));
         userNameText.setVisible(false);
         panel.add(userNameText, gc);
 
         gc.gridx = 1;
+        gc.gridy = 3;
         var userNameInput = new JTextField("", 15);
         userNameInput.setVisible(false);
         panel.add(userNameInput, gc);
 
         gc.gridx = 0;
-        gc.gridy = 3;
+        gc.gridy = 4;
         var passwordText = new JLabel(TextUtils.getText("label.password"));
         passwordText.setVisible(false);
         panel.add(passwordText, gc);
 
         gc.gridx = 1;
+        gc.gridy = 4;
         var passwordInput = new JTextField("", 15);
         passwordInput.setVisible(false);
         panel.add(passwordInput, gc);
 
         gc.gridx = 0;
-        gc.gridy = 2;
+        gc.gridy = 3;
         var serverCertificateText = new JLabel(TextUtils.getText("label.serverCertificate"));
         serverCertificateText.setVisible(false);
         panel.add(serverCertificateText, gc);
 
         gc.gridx = 1;
+        gc.gridy = 3;
         var serverCertificateButton = new JButton("Choose File");
         AtomicReference<String> serverCertificatePath = new AtomicReference<>("");
         serverCertificateButton.addActionListener((a) -> {
@@ -148,6 +179,26 @@ public class ConnectionPanel {
             }
             executorService = Executors.newSingleThreadExecutor();
         });
+
+        var sessionsModel = new DefaultComboBoxModel<Session>();
+        var sessions = new JComboBox<>(sessionsModel);
+
+        sessionsModel.addElement(new Session(sessionName.getText(), null, false));
+        sessionHandler.load().forEach(sessionsModel::addElement);
+
+        sessions.addActionListener(e -> {
+            Session session = (Session) sessions.getSelectedItem();
+            address.setText(session.address());
+            sessionName.setText(session.name());
+        });
+
+        gc.gridx = 0;
+        gc.gridy = 6;
+        panel.add(new JLabel("Session:"), gc);
+
+        gc.gridx = 1;
+        gc.gridy = 6;
+        panel.add(sessions, gc);
 
         return panel;
     }
