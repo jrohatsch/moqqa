@@ -5,22 +5,49 @@ import com.github.jrohatsch.moqqa.session.SessionHandler;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class JsonSessionHandler implements SessionHandler {
+    private Path folderPath = Path.of(System.getProperty("user.home"), "moqqa");
+    private Path settingsFilePath = Path.of(System.getProperty("user.home"), "moqqa", "sessions.json");
+    private ObjectMapper mapper = new ObjectMapper();
     List<Session> sessions = new ArrayList<>();
 
     @Override
     public void save(Session session) {
-        var mapper = new ObjectMapper();
+        sessions.removeIf(eachSession -> eachSession.name().equals(session.name()));
         sessions.add(session);
-        mapper.writeValue(new File(System.getProperty("user.home").concat("/.moqqa/sessions.json")), sessions);
+
+        writeFile();
+    }
+
+    private void writeFile() {
+        if (!Files.exists(folderPath)) {
+            try {
+                Files.createDirectory(folderPath);
+            } catch (IOException e) {
+                System.err.printf("could not create direcotry %s%n!",folderPath);
+            }
+        }
+        mapper.writeValue(settingsFilePath.toFile(), sessions);
     }
 
     @Override
     public List<Session> load() {
-        return List.of(new Session("Local", "localhost:1883", true), new Session("Mosquitto Test", "mosquitto.org:1883", true));
+        if (Files.exists(settingsFilePath)) {
+            List<Map<String,String>> read = mapper.readValue(settingsFilePath.toFile(), List.class);
+
+            for (Map<String,String> map : read) {
+                var session = new Session(map.get("name"), map.get("address"), true);
+                sessions.add(session);
+            }
+        }
+         return sessions;
     }
 
     @Override
@@ -30,6 +57,7 @@ public class JsonSessionHandler implements SessionHandler {
 
     @Override
     public void delete(String sessionName) {
-
+        sessions.removeIf(session -> session.name().equals(sessionName));
+        writeFile();
     }
 }

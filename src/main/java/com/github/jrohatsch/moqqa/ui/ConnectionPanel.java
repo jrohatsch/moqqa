@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ConnectionPanel {
     private final Datahandler datahandler;
+    private JTabbedPane tabbedPane;
     private JPanel panel;
     private final Runnable onConnect;
     private SessionHandler sessionHandler;
@@ -34,7 +35,7 @@ public class ConnectionPanel {
     }
 
 
-    public JPanel get() {
+    public JPanel getSessionPanel(String sessionNameText, int tabIndex) {
         panel = new JPanel();
         panel.setLayout(new GridBagLayout());
 
@@ -45,7 +46,7 @@ public class ConnectionPanel {
         gc.gridy = 0;
         panel.add(new JLabel("Session Name:"), gc);
 
-        var sessionName = new JTextField("New Session", 15);
+        var sessionName = new JTextField(sessionNameText, 15);
 
         gc.gridx = 1;
         gc.gridy = 0;
@@ -56,6 +57,13 @@ public class ConnectionPanel {
         gc.gridx = 2;
         gc.gridy = 0;
         panel.add(sessionSave, gc);
+
+        var sessionDelete = new JButton("Delete");
+
+        gc.gridx = 3;
+        gc.gridy = 0;
+        panel.add(sessionDelete, gc);
+
 
         gc.gridx = 0;
         gc.gridy = 1;
@@ -180,27 +188,30 @@ public class ConnectionPanel {
             executorService = Executors.newSingleThreadExecutor();
         });
 
-        var sessionsModel = new DefaultComboBoxModel<Session>();
-        var sessions = new JComboBox<>(sessionsModel);
-
-        sessionsModel.addElement(new Session(sessionName.getText(), null, false));
-        sessionHandler.load().forEach(sessionsModel::addElement);
-
-        sessions.addActionListener(e -> {
-            Session session = (Session) sessions.getSelectedItem();
-            address.setText(session.address());
-            sessionName.setText(session.name());
+        sessionSave.addActionListener(a->{
+            System.out.println("Save Session called");
+            sessionHandler.save(new Session(sessionName.getText(), address.getText(), true));
+            tabbedPane.setTitleAt(tabIndex, sessionName.getText());
         });
 
-        gc.gridx = 0;
-        gc.gridy = 6;
-        panel.add(new JLabel("Session:"), gc);
-
-        gc.gridx = 1;
-        gc.gridy = 6;
-        panel.add(sessions, gc);
-
         return panel;
+    }
+
+    private void updateTabs() {
+        var savedSessions = sessionHandler.load();
+
+        if (savedSessions.isEmpty()) {
+            tabbedPane.add("New Session", getSessionPanel("New Session", 0));
+        }
+
+        System.out.printf("Before loop size: %d%n", savedSessions.size());
+        savedSessions.forEach(session -> {
+                    System.out.printf("Add Tab %s%n", session.name());
+                    tabbedPane.add(session.name(), getSessionPanel(session.name(), tabbedPane.getTabCount()));
+                }
+        );
+
+        tabbedPane.add(" + ", new JPanel());
     }
 
     public boolean connected() {
@@ -209,5 +220,24 @@ public class ConnectionPanel {
 
     public void setVisible(boolean visible) {
         panel.setVisible(visible);
+    }
+
+    public Component get() {
+        tabbedPane = new JTabbedPane();
+
+        updateTabs();
+
+        tabbedPane.addChangeListener(e -> {
+            var pane = (JTabbedPane) e.getSource();
+            if (pane.getSelectedIndex() == pane.indexOfTab(" + ")) {
+                tabbedPane.removeTabAt(pane.getSelectedIndex());
+                int index = tabbedPane.getTabCount();
+                tabbedPane.add("New Session", getSessionPanel("New Session", index));
+                tabbedPane.setSelectedIndex(index);
+                tabbedPane.add(" + ", new JPanel());
+            }
+        });
+
+        return tabbedPane;
     }
 }
