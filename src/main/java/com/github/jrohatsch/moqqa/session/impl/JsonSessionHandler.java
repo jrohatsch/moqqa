@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class JsonSessionHandler implements SessionHandler {
     private Path folderPath = Path.of(System.getProperty("user.home"), "moqqa");
@@ -43,7 +44,7 @@ public class JsonSessionHandler implements SessionHandler {
             List<Map<String,String>> read = mapper.readValue(settingsFilePath.toFile(), List.class);
 
             for (Map<String,String> map : read) {
-                var session = new Session(map.get("name"), map.get("address"), true);
+                var session = new Session(map.get("name"), map.get("address"));
                 sessions.add(session);
             }
         }
@@ -51,8 +52,17 @@ public class JsonSessionHandler implements SessionHandler {
     }
 
     @Override
-    public Session load(String sessionName) {
-        return null;
+    public Optional<Session> load(String sessionName) {
+        if (Files.exists(settingsFilePath)) {
+            List<Map<String,String>> read = mapper.readValue(settingsFilePath.toFile(), List.class);
+
+            for (Map<String,String> map : read) {
+                if (map.get("name").equals(sessionName)) {
+                     return Optional.of(new Session(map.get("name"), map.get("address")));
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     @Override

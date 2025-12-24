@@ -6,7 +6,6 @@ import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.session.Session;
 import com.github.jrohatsch.moqqa.session.SessionHandler;
 import com.github.jrohatsch.moqqa.session.impl.JsonSessionHandler;
-import com.github.jrohatsch.moqqa.utils.ColorUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
@@ -24,6 +23,7 @@ public class ConnectionPanel {
     private JPanel panel;
     private final Runnable onConnect;
     private SessionHandler sessionHandler;
+    private int addSessionCounter = 1;
 
     private boolean isConnected;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -35,7 +35,7 @@ public class ConnectionPanel {
     }
 
 
-    public JPanel getSessionPanel(String sessionNameText, int tabIndex) {
+    public JPanel getSessionPanel(String sessionName) {
         panel = new JPanel();
         panel.setLayout(new GridBagLayout());
 
@@ -46,30 +46,21 @@ public class ConnectionPanel {
         gc.gridy = 0;
         panel.add(new JLabel("Session Name:"), gc);
 
-        var sessionName = new JTextField(sessionNameText, 15);
+        var sessionNameTextField = new JTextField(sessionName, 15);
 
         gc.gridx = 1;
         gc.gridy = 0;
-        panel.add(sessionName, gc);
+        panel.add(sessionNameTextField, gc);
 
-        var sessionSave = new JButton("Save");
-
-        gc.gridx = 2;
-        gc.gridy = 0;
-        panel.add(sessionSave, gc);
-
-        var sessionDelete = new JButton("Delete");
-
-        gc.gridx = 3;
-        gc.gridy = 0;
-        panel.add(sessionDelete, gc);
+        // load session
+        var session = sessionHandler.load(sessionName).orElse(new Session("New Session", "localhost:1883"));
 
 
         gc.gridx = 0;
         gc.gridy = 1;
         panel.add(new JLabel(TextUtils.getText("label.mqttAddress")), gc);
 
-        var address = new JTextField("localhost:1883", 15);
+        var address = new JTextField(session.address(), 15);
 
         gc.gridx = 1;
         gc.gridy = 1;
@@ -158,6 +149,9 @@ public class ConnectionPanel {
         });
 
         connectButton.addCallback(0,()->{
+            // save session details
+            sessionHandler.save(new Session(sessionNameTextField.getText(), address.getText()));
+
             // check authentication
             if (authChoices[authComboBox.getSelectedIndex()].equals("Username/Password")) {
                 System.out.println("Using password/username");
@@ -188,11 +182,11 @@ public class ConnectionPanel {
             executorService = Executors.newSingleThreadExecutor();
         });
 
-        sessionSave.addActionListener(a->{
-            System.out.println("Save Session called");
-            sessionHandler.save(new Session(sessionName.getText(), address.getText(), true));
-            tabbedPane.setTitleAt(tabIndex, sessionName.getText());
-        });
+//        sessionSave.addActionListener(a->{
+//            System.out.println("Save Session called");
+//            sessionHandler.save(new Session(sessionNameTextField.getText(), address.getText()));
+//            tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(), sessionNameTextField.getText());
+//        });
 
         return panel;
     }
@@ -201,13 +195,13 @@ public class ConnectionPanel {
         var savedSessions = sessionHandler.load();
 
         if (savedSessions.isEmpty()) {
-            tabbedPane.add("New Session", getSessionPanel("New Session", 0));
+            tabbedPane.add("New Session", getSessionPanel("New Session"));
         }
 
         System.out.printf("Before loop size: %d%n", savedSessions.size());
         savedSessions.forEach(session -> {
                     System.out.printf("Add Tab %s%n", session.name());
-                    tabbedPane.add(session.name(), getSessionPanel(session.name(), tabbedPane.getTabCount()));
+                    tabbedPane.add(session.name(), getSessionPanel(session.name()));
                 }
         );
 
@@ -219,7 +213,7 @@ public class ConnectionPanel {
     }
 
     public void setVisible(boolean visible) {
-        panel.setVisible(visible);
+        tabbedPane.setVisible(visible);
     }
 
     public Component get() {
@@ -232,11 +226,14 @@ public class ConnectionPanel {
             if (pane.getSelectedIndex() == pane.indexOfTab(" + ")) {
                 tabbedPane.removeTabAt(pane.getSelectedIndex());
                 int index = tabbedPane.getTabCount();
-                tabbedPane.add("New Session", getSessionPanel("New Session", index));
+                String sessionName = "New Session (%d)".formatted(addSessionCounter++);
+                tabbedPane.add(sessionName, getSessionPanel(sessionName));
                 tabbedPane.setSelectedIndex(index);
                 tabbedPane.add(" + ", new JPanel());
             }
         });
+
+        tabbedPane.addMouseListener(new SessionTabMouseListener(sessionHandler));
 
         return tabbedPane;
     }
