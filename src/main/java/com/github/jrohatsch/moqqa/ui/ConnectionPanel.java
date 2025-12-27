@@ -3,8 +3,7 @@ package com.github.jrohatsch.moqqa.ui;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
 import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
-import com.github.jrohatsch.moqqa.session.Session;
-import com.github.jrohatsch.moqqa.session.SessionHandler;
+import com.github.jrohatsch.moqqa.session.*;
 import com.github.jrohatsch.moqqa.session.impl.JsonSessionHandler;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
@@ -53,7 +52,7 @@ public class ConnectionPanel {
         panel.add(sessionNameTextField, gc);
 
         // load session
-        var session = sessionHandler.load(sessionName).orElse(new Session("New Session", "localhost:1883"));
+        var session = sessionHandler.get(sessionName).orElse(Session.anonymous("New Session", "localhost:1883"));
 
 
         gc.gridx = 0;
@@ -76,7 +75,7 @@ public class ConnectionPanel {
         gc.gridy = 2;
         panel.add(new JLabel(TextUtils.getText("label.auth")), gc);
 
-        String[] authChoices = new String[]{"Anonymous", "Username/Password", "Server Certificate"};
+        String[] authChoices = new String[]{AuthenticationType.ANONYMOUS.text, AuthenticationType.USERNAME_PASSWORD.text, AuthenticationType.SERVER_CERT.text};
         var authComboBox = new JComboBox<>(authChoices);
 
         gc.gridx = 1;
@@ -133,32 +132,47 @@ public class ConnectionPanel {
         panel.add(serverCertificateButton, gc);
 
 
+        // use loaded session auth values
+        authComboBox.setSelectedItem(session.authentication().type.text);
+        switch (session.authentication().type) {
+            case ANONYMOUS -> {
+                // nothing to do
+            }
+            case USERNAME_PASSWORD -> {
+                UsernamePassword auth = (UsernamePassword) session.authentication();
+                userNameInput.setText(auth.username);
+                passwordInput.setText(auth.password);
+            }
+            case SERVER_CERT -> {
+                ServerCertificate auth = (ServerCertificate) session.authentication();
+                serverCertificatePath.set(auth.certPath);
+            }
+        }
+        displayAuthInputs(authChoices, authComboBox, userNameText, userNameInput, passwordText, passwordInput, serverCertificateText, serverCertificateButton);
+
+
         authComboBox.addItemListener((ItemEvent itemEvent) -> {
-            int index = authComboBox.getSelectedIndex();
-            String item = authChoices[index];
-
-            boolean useUsernamePassword = item.equals("Username/Password");
-            userNameText.setVisible(useUsernamePassword);
-            userNameInput.setVisible(useUsernamePassword);
-            passwordText.setVisible(useUsernamePassword);
-            passwordInput.setVisible(useUsernamePassword);
-
-            boolean useServerCertificate = item.equals("Server Certificate");
-            serverCertificateText.setVisible(useServerCertificate);
-            serverCertificateButton.setVisible(useServerCertificate);
+            displayAuthInputs(authChoices, authComboBox, userNameText, userNameInput, passwordText, passwordInput, serverCertificateText, serverCertificateButton);
         });
 
         connectButton.addCallback(0,()->{
-            // save session details
-            sessionHandler.save(new Session(sessionNameTextField.getText(), address.getText()));
+
+            if (userNameInput.isVisible() && passwordInput.isVisible()) {
+                sessionHandler.save(Session.usernamePassword(sessionNameTextField.getText(), address.getText(), userNameInput.getText(), passwordInput.getText()));
+            } else if (serverCertificateText.isVisible()) {
+                sessionHandler.save(Session.certPath(sessionNameTextField.getText(), address.getText(), serverCertificatePath.get()));
+            } else {
+                // save session details
+                sessionHandler.save(Session.anonymous(sessionNameTextField.getText(), address.getText()));
+            }
 
             // check authentication
-            if (authChoices[authComboBox.getSelectedIndex()].equals("Username/Password")) {
+            if (authChoices[authComboBox.getSelectedIndex()].equals(AuthenticationType.USERNAME_PASSWORD.text)) {
                 System.out.println("Using password/username");
                 datahandler.connector().auth(new MqttUsernamePassword(userNameInput.getText(), passwordInput.getText()));
             }
 
-            if (authChoices[authComboBox.getSelectedIndex()].equals("Server Certificate")) {
+            if (authChoices[authComboBox.getSelectedIndex()].equals(AuthenticationType.SERVER_CERT)) {
                 datahandler.connector().auth(new MqttServerCertificate(serverCertificatePath.get()));
             }
 
@@ -182,16 +196,28 @@ public class ConnectionPanel {
             executorService = Executors.newSingleThreadExecutor();
         });
 
-//        sessionSave.addActionListener(a->{
-//            System.out.println("Save Session called");
-//            sessionHandler.save(new Session(sessionNameTextField.getText(), address.getText()));
-//            tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(), sessionNameTextField.getText());
-//        });
-
         return panel;
     }
 
+    private static void displayAuthInputs(String[] authChoices, JComboBox<String> authComboBox, JLabel userNameText, JTextField userNameInput, JLabel passwordText, JTextField passwordInput, JLabel serverCertificateText, JButton serverCertificateButton) {
+        int index = authComboBox.getSelectedIndex();
+        String item = authChoices[index];
+
+        boolean useUsernamePassword = item.equals(AuthenticationType.USERNAME_PASSWORD.text);
+        userNameText.setVisible(useUsernamePassword);
+        userNameInput.setVisible(useUsernamePassword);
+        passwordText.setVisible(useUsernamePassword);
+        passwordInput.setVisible(useUsernamePassword);
+
+        boolean useServerCertificate = item.equals(AuthenticationType.SERVER_CERT.text);
+        serverCertificateText.setVisible(useServerCertificate);
+        serverCertificateButton.setVisible(useServerCertificate);
+    }
+
     private void updateTabs() {
+        // clean up
+        tabbedPane.removeAll();
+
         var savedSessions = sessionHandler.load();
 
         if (savedSessions.isEmpty()) {

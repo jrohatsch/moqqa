@@ -8,7 +8,7 @@ public interface SessionHandler {
 
     List<Session> load();
 
-    Optional<Session> load(String sessionName);
+    Optional<Session> get(String sessionName);
 
     void delete(String sessionName);
 }

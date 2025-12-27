@@ -1,10 +1,10 @@
 package com.github.jrohatsch.moqqa.session.impl;
 
+import com.github.jrohatsch.moqqa.session.AuthenticationType;
 import com.github.jrohatsch.moqqa.session.Session;
 import com.github.jrohatsch.moqqa.session.SessionHandler;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,31 +38,44 @@ public class JsonSessionHandler implements SessionHandler {
         mapper.writeValue(settingsFilePath.toFile(), sessions);
     }
 
-    @Override
     public List<Session> load() {
-        if (Files.exists(settingsFilePath)) {
-            List<Map<String,String>> read = mapper.readValue(settingsFilePath.toFile(), List.class);
+        sessions.clear();
 
-            for (Map<String,String> map : read) {
-                var session = new Session(map.get("name"), map.get("address"));
-                sessions.add(session);
+        if (Files.exists(settingsFilePath)) {
+            List<Map<String,Object>> read = mapper.readValue(settingsFilePath.toFile(), List.class);
+
+            for (Map<String,Object> map : read) {
+                String name = (String) map.get("name");
+                String address = (String) map.get("address");
+
+                if (map.containsKey("authentication")) {
+                    Map<String, String> auth = (Map<String, String>) map.get("authentication");
+
+                    if (auth.containsKey("type")) {
+                        String type = auth.get("type");
+                        if (AuthenticationType.USERNAME_PASSWORD.name().equals(type)) {
+                            String username = auth.get("username");
+                            String password = auth.get("password");
+                            sessions.add(Session.usernamePassword(name, address, username, password));
+                        } else if (AuthenticationType.SERVER_CERT.name().equals(type)) {
+                            String certPath = auth.get("certPath");
+                            sessions.add(Session.certPath(name, address, certPath));
+                        } else if (AuthenticationType.ANONYMOUS.name().equals(type)) {
+                            sessions.add(Session.anonymous(name, address));
+                        }
+                    } else {
+                        sessions.add(Session.anonymous(name, address));
+                    }
+                }
+
             }
         }
-         return sessions;
+         return new ArrayList<>(sessions);
     }
 
     @Override
-    public Optional<Session> load(String sessionName) {
-        if (Files.exists(settingsFilePath)) {
-            List<Map<String,String>> read = mapper.readValue(settingsFilePath.toFile(), List.class);
-
-            for (Map<String,String> map : read) {
-                if (map.get("name").equals(sessionName)) {
-                     return Optional.of(new Session(map.get("name"), map.get("address")));
-                }
-            }
-        }
-        return Optional.empty();
+    public Optional<Session> get(String sessionName) {
+        return sessions.stream().filter(session -> session.name().equals(sessionName)).findFirst();
     }
 
     @Override
