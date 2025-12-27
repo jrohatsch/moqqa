@@ -22,11 +22,30 @@ public class SessionTabMouseListener implements MouseListener {
             var closeTab = new JMenuItem("Close Tab");
             closeTab.addActionListener(a -> {
                 if (tabbedPane.getTabCount() > 2) {
+                    // move the index to left one, because if it switches to " + " tab
+                    // automatically a new tab is added
+                    tabbedPane.setSelectedIndex(index - 1);
                     sessionHandler.delete(tabbedPane.getTitleAt(index));
                     tabbedPane.removeTabAt(index);
                 }
             });
             var closeOtherTabs = new JMenuItem("Close Other Tabs");
+            closeOtherTabs.addActionListener(a -> {
+                String tabToKeep = tabbedPane.getTitleAt(index);
+                System.out.printf("Closing all other tabs, keeping %s%n".formatted(tabToKeep));
+                int tabRemoveIndex = 0;
+                while (tabbedPane.getTabCount() > 2) {
+                    String eachTab = tabbedPane.getTitleAt(tabRemoveIndex);
+                    if(eachTab.equals(tabToKeep)) {
+                        // ignore this index step to next one
+                        tabRemoveIndex++;
+                    } else {
+                        sessionHandler.delete(tabbedPane.getTitleAt(tabRemoveIndex));
+                        tabbedPane.removeTabAt(tabRemoveIndex);
+                        // do not increment index, as other tabs to close automatically shift
+                    }
+                }
+            });
 
             // check if more than the tabs ["Session", " + "] are present
             if (tabbedPane.getTabCount() > 2) {
