@@ -51,7 +51,7 @@ public class UserInterface {
     }
 
     private void addConnectionPanel() {
-        connectionPanel = new ConnectionPanel(dataHandler, this::waitForConnection);
+        connectionPanel = new ConnectionPanel(dataHandler);
         frame.add(connectionPanel.get());
         frame.setTitle("Moqqa: %s".formatted(TextUtils.getText("label.connectOptions")));
         activePanel = PanelType.CONNECTION;
