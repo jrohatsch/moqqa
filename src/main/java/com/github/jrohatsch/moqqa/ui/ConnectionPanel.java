@@ -11,6 +11,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ItemEvent;
+import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -20,19 +21,31 @@ public class ConnectionPanel {
     private final Datahandler datahandler;
     private JTabbedPane tabbedPane;
     private JPanel panel;
-    private final Runnable onConnect;
-    private SessionHandler sessionHandler;
+    private final SessionHandler sessionHandler;
     private int addSessionCounter = 1;
 
     private boolean isConnected;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    public ConnectionPanel(Datahandler datahandler, Runnable onConnect) {
+    public ConnectionPanel(Datahandler datahandler) {
         this.datahandler = datahandler;
-        this.onConnect = onConnect;
         this.sessionHandler = new JsonSessionHandler();
     }
 
+    private static void displayAuthInputs(String[] authChoices, JComboBox<String> authComboBox, JLabel userNameText, JTextField userNameInput, JLabel passwordText, JTextField passwordInput, JLabel serverCertificateText, JButton serverCertificateButton) {
+        int index = authComboBox.getSelectedIndex();
+        String item = authChoices[index];
+
+        boolean useUsernamePassword = item.equals(AuthenticationType.USERNAME_PASSWORD.text);
+        userNameText.setVisible(useUsernamePassword);
+        userNameInput.setVisible(useUsernamePassword);
+        passwordText.setVisible(useUsernamePassword);
+        passwordInput.setVisible(useUsernamePassword);
+
+        boolean useServerCertificate = item.equals(AuthenticationType.SERVER_CERT.text);
+        serverCertificateText.setVisible(useServerCertificate);
+        serverCertificateButton.setVisible(useServerCertificate);
+    }
 
     public JPanel getSessionPanel(String sessionName) {
         panel = new JPanel();
@@ -65,7 +78,7 @@ public class ConnectionPanel {
         gc.gridy = 1;
         panel.add(address, gc);
 
-        var connectButton = new TwoStateButton(TextUtils.getText("button.connect"),TextUtils.getText("button.cancel"));
+        var connectButton = new TwoStateButton(TextUtils.getText("button.connect"), TextUtils.getText("button.cancel"));
 
         gc.gridx = 2;
         gc.gridy = 1;
@@ -145,17 +158,20 @@ public class ConnectionPanel {
             }
             case SERVER_CERT -> {
                 ServerCertificate auth = (ServerCertificate) session.authentication();
-                serverCertificatePath.set(auth.certPath);
+                File cert = new File(auth.certPath);
+                if (cert.exists()) {
+                    serverCertificatePath.set(auth.certPath);
+                    serverCertificateButton.setText(cert.getName());
+                }
+
             }
         }
         displayAuthInputs(authChoices, authComboBox, userNameText, userNameInput, passwordText, passwordInput, serverCertificateText, serverCertificateButton);
 
 
-        authComboBox.addItemListener((ItemEvent itemEvent) -> {
-            displayAuthInputs(authChoices, authComboBox, userNameText, userNameInput, passwordText, passwordInput, serverCertificateText, serverCertificateButton);
-        });
+        authComboBox.addItemListener((ItemEvent itemEvent) -> displayAuthInputs(authChoices, authComboBox, userNameText, userNameInput, passwordText, passwordInput, serverCertificateText, serverCertificateButton));
 
-        connectButton.addCallback(0,()->{
+        connectButton.addCallback(0, () -> {
 
             if (userNameInput.isVisible() && passwordInput.isVisible()) {
                 sessionHandler.save(Session.usernamePassword(sessionNameTextField.getText(), address.getText(), userNameInput.getText(), passwordInput.getText()));
@@ -172,7 +188,7 @@ public class ConnectionPanel {
                 datahandler.connector().auth(new MqttUsernamePassword(userNameInput.getText(), passwordInput.getText()));
             }
 
-            if (authChoices[authComboBox.getSelectedIndex()].equals(AuthenticationType.SERVER_CERT)) {
+            if (authChoices[authComboBox.getSelectedIndex()].equals(AuthenticationType.SERVER_CERT.text)) {
                 datahandler.connector().auth(new MqttServerCertificate(serverCertificatePath.get()));
             }
 
@@ -197,21 +213,6 @@ public class ConnectionPanel {
         });
 
         return panel;
-    }
-
-    private static void displayAuthInputs(String[] authChoices, JComboBox<String> authComboBox, JLabel userNameText, JTextField userNameInput, JLabel passwordText, JTextField passwordInput, JLabel serverCertificateText, JButton serverCertificateButton) {
-        int index = authComboBox.getSelectedIndex();
-        String item = authChoices[index];
-
-        boolean useUsernamePassword = item.equals(AuthenticationType.USERNAME_PASSWORD.text);
-        userNameText.setVisible(useUsernamePassword);
-        userNameInput.setVisible(useUsernamePassword);
-        passwordText.setVisible(useUsernamePassword);
-        passwordInput.setVisible(useUsernamePassword);
-
-        boolean useServerCertificate = item.equals(AuthenticationType.SERVER_CERT.text);
-        serverCertificateText.setVisible(useServerCertificate);
-        serverCertificateButton.setVisible(useServerCertificate);
     }
 
     private void updateTabs() {
