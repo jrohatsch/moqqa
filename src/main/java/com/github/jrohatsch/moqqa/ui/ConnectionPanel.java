@@ -23,8 +23,7 @@ public class ConnectionPanel {
     private JPanel panel;
     private final SessionHandler sessionHandler;
     private int addSessionCounter = 1;
-
-    private boolean isConnected;
+    private final Object connectionLock = new Object();
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public ConnectionPanel(Datahandler datahandler) {
@@ -193,11 +192,14 @@ public class ConnectionPanel {
             }
 
             executorService.submit(() -> {
-                boolean connected = datahandler.connector().connect(address.getText());
-                if (connected) {
-                    isConnected = true;
-                } else {
-                    System.out.println("Could not connect");
+                synchronized (connectionLock) {
+                    boolean connected = datahandler.connector().connect(address.getText());
+                    if (!connected) {
+                        System.out.println("Could not connect!");
+                    } else {
+                        System.out.println("Connection established!");
+                        connectionLock.notifyAll();
+                    }
                 }
             });
         });
@@ -235,10 +237,6 @@ public class ConnectionPanel {
         tabbedPane.add(" + ", new JPanel());
     }
 
-    public boolean connected() {
-        return isConnected;
-    }
-
     public void setVisible(boolean visible) {
         tabbedPane.setVisible(visible);
     }
@@ -263,5 +261,15 @@ public class ConnectionPanel {
         tabbedPane.addMouseListener(new SessionTabMouseListener(sessionHandler));
 
         return tabbedPane;
+    }
+
+    public void waitForConnection() {
+        synchronized (connectionLock){
+            try {
+                connectionLock.wait();
+            } catch (InterruptedException ignored) {
+
+            }
+        }
     }
 }

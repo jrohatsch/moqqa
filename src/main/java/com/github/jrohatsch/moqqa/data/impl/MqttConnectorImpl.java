@@ -7,8 +7,6 @@ import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.*;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.function.Consumer;
 
 
@@ -47,23 +45,14 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
         }
 
         try {
-            client.connect(connectOptions);
+            client.connect(connectOptions).waitForCompletion();
         } catch (MqttException e) {
             System.err.println(e);
             return false;
         }
 
-        Instant start = Instant.now();
-        while (!client.isConnected()) {
-            try {
-                Thread.sleep(100);
-                if (Duration.between(start, Instant.now()).compareTo(Duration.ofSeconds(30)) > 0) {
-                    return false;
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return false;
-            }
+        if (!client.isConnected()) {
+            return false;
         }
 
         try {
@@ -110,20 +99,11 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     @Override
     public void disconnect() {
         try {
-            client.disconnect();
+            client.disconnect().waitForCompletion();
+            System.out.println("disconnected");
             connectOptions = new MqttConnectOptions();
             address = "";
             protocol = "tcp";
-
-
-            while (client.isConnected()) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
         } catch (MqttException e) {
             System.err.println(e);
         }

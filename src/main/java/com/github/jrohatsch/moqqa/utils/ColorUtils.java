@@ -4,7 +4,7 @@ import java.awt.*;
 
 public class ColorUtils {
     public static final Color RED = Color.RED;
-    public static Color BLUE = rgb(64, 111, 180);
+    public static final Color BLUE = rgb(64, 111, 180);
 
     private static Color rgb(int red, int green, int blue) {
         var hsb = Color.RGBtoHSB(red, green, blue, null);

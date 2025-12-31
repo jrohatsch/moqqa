@@ -6,10 +6,10 @@ import javax.swing.*;
 import java.awt.*;
 
 public class TwoStateButton extends JButton {
-    private String[] states;
+    private final String[] states;
     private int selectedState;
-    private Runnable[] callbacks;
-    private Color[] colors;
+    private final Runnable[] callbacks;
+    private final Color[] colors;
 
 
     public TwoStateButton(String stateA, String stateB) {

@@ -14,10 +14,10 @@ import java.util.Map;
 import java.util.Optional;
 
 public class JsonSessionHandler implements SessionHandler {
-    private Path folderPath = Path.of(System.getProperty("user.home"), "moqqa");
-    private Path settingsFilePath = Path.of(System.getProperty("user.home"), "moqqa", "sessions.json");
-    private ObjectMapper mapper = new ObjectMapper();
-    List<Session> sessions = new ArrayList<>();
+    private final Path folderPath = Path.of(System.getProperty("user.home"), "moqqa");
+    private final Path settingsFilePath = Path.of(System.getProperty("user.home"), "moqqa", "sessions.json");
+    private final ObjectMapper mapper = new ObjectMapper();
+    final List<Session> sessions = new ArrayList<>();
 
     @Override
     public void save(Session session) {
