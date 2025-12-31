@@ -22,4 +22,6 @@ public interface MqttConnector {
     void auth(MqttServerCertificate credentials);
 
     String getAddress();
+
+    boolean isConnected();
 }

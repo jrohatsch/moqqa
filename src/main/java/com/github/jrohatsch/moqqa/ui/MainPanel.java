@@ -20,6 +20,7 @@ public class MainPanel {
     private AnalyzePage analyzePage;
     private PathItemInfo pathItemInfo;
     private JPanel panel;
+    private ConnectionState connectionState;
 
     public MainPanel(Datahandler datahandler) {
         this.dataHandler = datahandler;
@@ -110,6 +111,8 @@ public class MainPanel {
 
         var bottomToolbar = new JMenuBar();
         bottomToolbar.add(new SettingsButton(panel));
+        connectionState = new ConnectionState(dataHandler.connector());
+        bottomToolbar.add(connectionState);
 
         panel.add(bottomToolbar, BorderLayout.SOUTH);
 
@@ -125,6 +128,7 @@ public class MainPanel {
     public void start() {
         pathItemUpdater.start();
         analyzePage.execute();
+        connectionState.start();
     }
 
     public void setVisible(boolean b) {

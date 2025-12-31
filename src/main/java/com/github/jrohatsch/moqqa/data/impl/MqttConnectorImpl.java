@@ -22,6 +22,7 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     @Override
     public IMqttAsyncClient getClient(String url) throws MqttException {
         address = "%s://%s".formatted(protocol, url);
+        connectOptions.setKeepAliveInterval(1);
         return new MqttAsyncClient(address, "Moqqa");
     }
 
@@ -77,7 +78,7 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
 
     @Override
     public void connectionLost(Throwable throwable) {
-
+        System.out.println("Connection Lost!");
     }
 
     @Override
@@ -145,5 +146,10 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     @Override
     public String getAddress() {
         return address;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return client.isConnected();
     }
 }

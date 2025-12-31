@@ -55,4 +55,9 @@ class TestMqttConnector implements MqttConnector {
     public String getAddress() {
         return "tcp://localhost:1883";
     }
+
+    @Override
+    public boolean isConnected() {
+        return true;
+    }
 }
