@@ -109,6 +109,13 @@
             <version>3.0.3</version>
         </dependency>
 
+        <!-- to check if a mqtt string value is Numeric -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.17.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>
