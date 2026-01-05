@@ -22,7 +22,7 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     @Override
     public IMqttAsyncClient getClient(String url) throws MqttException {
         address = "%s://%s".formatted(protocol, url);
-        connectOptions.setKeepAliveInterval(1);
+        connectOptions.setKeepAliveInterval(10);
         return new MqttAsyncClient(address, "Moqqa", memoryPersistence);
     }
 
