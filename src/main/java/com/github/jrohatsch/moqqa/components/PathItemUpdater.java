@@ -24,7 +24,9 @@ public class PathItemUpdater implements PathObserver {
 
     public JList<PathListItem> init() {
         this.pathItemsModel = new DefaultListModel<>();
-        return new JList<>(pathItemsModel);
+        var list = new JList<>(pathItemsModel);
+        list.setCellRenderer(new PathItemRenderer());
+        return list;
     }
 
     @Override

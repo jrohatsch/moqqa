@@ -1,8 +1,33 @@
 package com.github.jrohatsch.moqqa.domain;
 
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.Optional;
 
 public record PathListItem(String topic, Optional<String> value, long childTopics) {
+
+    public PathListItemType type() {
+        if (childTopics() > 0) {
+            return PathListItemType.PARENT;
+        } else if (value().isPresent()) {
+            String value = value().get();
+
+            if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
+                return PathListItemType.BOOL;
+            }
+            try {
+                if (new ObjectMapper().readTree(value).isNumber()) {
+                    return PathListItemType.NUMBER;
+                }
+            } catch (StreamReadException ignored) {
+
+            }
+        }
+
+        return PathListItemType.TEXT;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

@@ -6,6 +6,7 @@ import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
 import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.domain.Message;
 import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.util.function.Consumer;
 
@@ -13,6 +14,7 @@ import java.util.function.Consumer;
 public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     private IMqttAsyncClient client;
     private MqttConnectOptions connectOptions = new MqttConnectOptions();
+    private final MemoryPersistence memoryPersistence = new MemoryPersistence();
     private Consumer<Message> messageConsumer;
     private String protocol = "tcp";
     private String address = "";
@@ -20,8 +22,8 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     @Override
     public IMqttAsyncClient getClient(String url) throws MqttException {
         address = "%s://%s".formatted(protocol, url);
-        connectOptions.setKeepAliveInterval(1);
-        return new MqttAsyncClient(address, "Moqqa");
+        connectOptions.setKeepAliveInterval(10);
+        return new MqttAsyncClient(address, "Moqqa", memoryPersistence);
     }
 
     public void setUserNameAndPassword(String username, String password) {

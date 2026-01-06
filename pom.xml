@@ -109,6 +109,13 @@
             <version>3.0.3</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.github.weisj/jsvg -->
+        <dependency>
+            <groupId>com.github.weisj</groupId>
+            <artifactId>jsvg</artifactId>
+            <version>1.7.2</version>
+        </dependency>
+
     </dependencies>
 
 </project>

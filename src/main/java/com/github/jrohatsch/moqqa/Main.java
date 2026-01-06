@@ -12,7 +12,6 @@ class Main {
         MqttConnectorImpl mqttConnector = new MqttConnectorImpl();
         DatahandlerImpl dataHandler = new DatahandlerImpl(mqttConnector);
         UserInterface userInterface = new UserInterface(dataHandler);
-        //userInterface.setFontSize(100);
         userInterface.show();
     }
 }
