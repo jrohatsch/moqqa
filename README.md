@@ -1,7 +1,15 @@
+## Demo
+
+### Browse
+![](https://github.com/jrohatsch/media_store/blob/master/moqqa-browser.gif)
+
+### Analyze
+![](https://github.com/jrohatsch/media_store/blob/master/moqqa-analyze.gif)
 
 
 
-# Package Builds
+
+## Builds
 
 Builds are packaged with jpackage tool for Windows and Linux. For Mac users run the .jar file with
 
@@ -9,7 +17,7 @@ Builds are packaged with jpackage tool for Windows and Linux. For Mac users run 
 java -jar moqqa.jar
 ```
 
-## Linux Install (Debian based)
+### Linux Install (Debian based)
 
 dpkg-deb -x ./main_1.0-1_amd64.deb /home/{USER}/moqqa
 
