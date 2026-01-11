@@ -38,8 +38,8 @@ public class AnalyzePage extends SwingWorker<Void, Void> {
 
     public JPanel init() {
         this.valuesModel.addColumn("topic");
-        this.valuesModel.addColumn("time");
         this.valuesModel.addColumn("value");
+        this.valuesModel.addColumn("time");
 
         var scroll = new JScrollPane();
         scroll.setViewportView(this.values);
@@ -133,13 +133,13 @@ public class AnalyzePage extends SwingWorker<Void, Void> {
                 // add all monitored values
                 datahandler.getHistoricValues().forEach(message -> {
                     if (valuesModel.getRowCount() == 0) {
-                        valuesModel.addRow(new String[]{message.topic(), timeUtils.format(message.time()), message.message()});
+                        valuesModel.addRow(new String[]{message.topic(), message.message(), timeUtils.format(message.time())});
                     } else {
                         // only insert if the timestamp is bigger than the timestamp on row 0!
-                        String timeString = (String) valuesModel.getValueAt(0, 1);
+                        String timeString = (String) valuesModel.getValueAt(0, 2);
 
                         if (timeUtils.compare(timeString, message.time()) < 0) {
-                            valuesModel.insertRow(0, new String[]{message.topic(), timeUtils.format(message.time()), message.message()});
+                            valuesModel.insertRow(0, new String[]{message.topic(), message.message(), timeUtils.format(message.time())});
                         }
                     }
                 });

@@ -11,8 +11,10 @@ import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class IconUtils {
+    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private static IconUtils instance;
     private Map<String, Icon> loaded;
     private SVGLoader svgLoader;
@@ -57,7 +59,7 @@ public class IconUtils {
             return instance.loaded.get(imageName + dimension);
         }
 
-        System.out.printf("loading image %s with dimension %s%n",imageName, dimension);
+        instance.LOGGER.info("loading image %s with dimension %s".formatted(imageName, dimension));
         var image = getSVGImage(IconUtils.class.getResource("/images/" + imageName), 24, 24);
 
         instance.loaded.put(imageName + dimension, new ImageIcon(image));

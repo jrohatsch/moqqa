@@ -9,9 +9,11 @@ import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 
 public class MqttConnectorImpl implements MqttConnector, MqttCallback {
+    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private IMqttAsyncClient client;
     private MqttConnectOptions connectOptions = new MqttConnectOptions();
     private final MemoryPersistence memoryPersistence = new MemoryPersistence();
@@ -32,7 +34,7 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     }
 
     public void setCAFile(String path) throws Exception {
-        System.out.println("switching to ssl and using certificate " + path);
+        LOGGER.info("switching to ssl and using certificate " + path);
         protocol = "ssl";
         connectOptions.setSocketFactory(SpecificCertificateTrust.createCustomSSLFactory(path));
     }
@@ -102,7 +104,7 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
     public void disconnect() {
         try {
             client.disconnect().waitForCompletion();
-            System.out.println("disconnected");
+            LOGGER.info("disconnected");
             connectOptions = new MqttConnectOptions();
             address = "";
             protocol = "tcp";

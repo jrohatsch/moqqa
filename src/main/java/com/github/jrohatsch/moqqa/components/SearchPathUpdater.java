@@ -5,8 +5,10 @@ import com.github.jrohatsch.moqqa.ui.SearchPathButton;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.logging.Logger;
 
 public class SearchPathUpdater {
+    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private final Datahandler datahandler;
     private final JToolBar path;
 
@@ -83,7 +85,7 @@ public class SearchPathUpdater {
             path.remove(path.getComponentCount() - 1);
             path.updateUI();
         } else {
-            System.out.println("already at root level!");
+            LOGGER.info("already at root level!");
         }
     }
 }

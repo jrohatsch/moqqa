@@ -11,8 +11,10 @@ import java.util.Iterator;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public class PathItemUpdater implements PathObserver {
+    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private final Datahandler dataHandler;
     private DefaultListModel<PathListItem> pathItemsModel;
     private String currentPath = "";
@@ -81,9 +83,9 @@ public class PathItemUpdater implements PathObserver {
             updatePathItems(updated);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.out.println("update thread interrupted");
+            LOGGER.warning("update thread interrupted");
         } catch (InvocationTargetException e) {
-            System.err.println(e);
+            LOGGER.severe(e.getMessage());
         }
     }
 

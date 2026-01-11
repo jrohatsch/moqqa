@@ -16,8 +16,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 
 public class ConnectionPanel {
+    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private final Datahandler datahandler;
     private JTabbedPane tabbedPane;
     private JPanel panel;
@@ -183,7 +185,6 @@ public class ConnectionPanel {
 
             // check authentication
             if (authChoices[authComboBox.getSelectedIndex()].equals(AuthenticationType.USERNAME_PASSWORD.text)) {
-                System.out.println("Using password/username");
                 datahandler.connector().auth(new MqttUsernamePassword(userNameInput.getText(), passwordInput.getText()));
             }
 
@@ -195,9 +196,9 @@ public class ConnectionPanel {
                 synchronized (connectionLock) {
                     boolean connected = datahandler.connector().connect(address.getText());
                     if (!connected) {
-                        System.out.println("Could not connect!");
+                        LOGGER.warning("Could not connect!");
                     } else {
-                        System.out.println("Connection established!");
+                        LOGGER.info("Connection established!");
                         connectionLock.notifyAll();
                     }
                 }
@@ -227,9 +228,8 @@ public class ConnectionPanel {
             tabbedPane.add("New Session", getSessionPanel("New Session"));
         }
 
-        System.out.printf("Before loop size: %d%n", savedSessions.size());
         savedSessions.forEach(session -> {
-                    System.out.printf("Add Tab %s%n", session.name());
+                    LOGGER.info("Add Tab %s".formatted(session.name()));
                     tabbedPane.add(session.name(), getSessionPanel(session.name()));
                 }
         );

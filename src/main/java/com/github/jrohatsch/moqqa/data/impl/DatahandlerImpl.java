@@ -13,9 +13,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class DatahandlerImpl implements Datahandler {
+    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private final MqttConnector mqttConnector;
     private final ConcurrentHashMap<String, Message> data;
     private final ConcurrentHashMap<String, LinkedList<Message>> monitored;
@@ -68,8 +70,7 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     public void setSearchPath(String searchPath) {
-        System.out.println("set search path to " + searchPath);
-
+        LOGGER.info("set search path to " + searchPath);
         this.searchPath = searchPath;
         pathObservers.forEach(observer -> observer.updatePath(getSearchPath()));
     }
@@ -90,7 +91,7 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     public void setSelectedItem(PathListItem selectedItem) {
-        System.out.println("set selected item to " + selectedItem);
+        LOGGER.info("set selected item to " + selectedItem);
         this.selectedItem = selectedItem;
         if (selectedItem == null) {
             selectionObserver.forEach(SelectionObserver::clear);

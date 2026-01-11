@@ -16,7 +16,6 @@ public class TimeUtils {
     }
 
     public void select(String zoneId) {
-        System.out.println("changed timezone to " + zoneId);
         selectedZoneId = ZoneId.of(zoneId);
     }
 

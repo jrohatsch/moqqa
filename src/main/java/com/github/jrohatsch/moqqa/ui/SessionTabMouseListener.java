@@ -32,7 +32,6 @@ public class SessionTabMouseListener implements MouseListener {
             var closeOtherTabs = new JMenuItem("Close Other Tabs");
             closeOtherTabs.addActionListener(a -> {
                 String tabToKeep = tabbedPane.getTitleAt(index);
-                System.out.printf("Closing all other tabs, keeping %s%n".formatted(tabToKeep));
                 int tabRemoveIndex = 0;
                 while (tabbedPane.getTabCount() > 2) {
                     String eachTab = tabbedPane.getTitleAt(tabRemoveIndex);
