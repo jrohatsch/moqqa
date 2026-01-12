@@ -11,8 +11,6 @@ import java.util.function.Predicate;
 public interface Datahandler {
     MqttConnector connector();
 
-    void forgetMonitoredValues();
-
     boolean monitorTopic(String topic);
 
     boolean isMonitored(String topic);
@@ -35,4 +33,6 @@ public interface Datahandler {
     List<Message> getHistoricValues();
 
     void clear();
+
+    List<Message> getMessages(Predicate<Message> filter);
 }

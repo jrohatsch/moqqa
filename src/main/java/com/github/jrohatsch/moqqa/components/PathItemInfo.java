@@ -85,6 +85,24 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
 
         panel.add(trackValueButton);
 
+        var printButton = new JButton("Snapshot");
+        printButton.setToolTipText("Copy current values to Clipboard");
+        printButton.addActionListener(l -> {
+            var messages = datahandler.getMessages(message -> message.topic().startsWith(fullTopic.getText()));
+            StringBuilder builder = new StringBuilder();
+            messages.forEach(message -> {
+                builder.append(message.topic());
+                builder.append(" = ");
+                builder.append(message.message());
+                builder.append("\n");
+            });
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(new StringSelection(builder.toString()), null);
+        });
+
+        panel.add(buildVerticalSeparator());
+        panel.add(printButton);
+
         clear();
 
         return panel;

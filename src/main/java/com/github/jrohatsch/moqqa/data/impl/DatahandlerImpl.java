@@ -171,11 +171,6 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
-    public void forgetMonitoredValues() {
-        monitored.clear();
-    }
-
-    @Override
     public boolean monitorTopic(String topic) {
         if (data.containsKey(topic)) {
             var historicValues = new LinkedList<Message>();
@@ -204,5 +199,11 @@ public class DatahandlerImpl implements Datahandler {
     public void clear() {
         data.clear();
     }
+
+    @Override
+    public List<Message> getMessages(Predicate<Message> filter) {
+        return data.values().stream().filter(filter).collect(Collectors.toList());
+    }
+
 
 }

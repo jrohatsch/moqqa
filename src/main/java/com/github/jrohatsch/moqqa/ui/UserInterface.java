@@ -5,6 +5,7 @@ import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.concurrent.ExecutorService;
@@ -30,6 +31,7 @@ public class UserInterface {
 
         addConnectionPanel();
 
+        frame.setMinimumSize(new Dimension(400,400));
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);

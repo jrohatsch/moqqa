@@ -4,8 +4,6 @@ import com.github.jrohatsch.moqqa.data.impl.DatahandlerImpl;
 import com.github.jrohatsch.moqqa.data.impl.MqttConnectorImpl;
 import com.github.jrohatsch.moqqa.ui.UserInterface;
 
-import java.io.IOException;
-
 class Main {
 
     public static void main(String[] args) {
