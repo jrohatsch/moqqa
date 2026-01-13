@@ -125,7 +125,7 @@ public class MainPanel {
 
     public void start() {
         pathItemUpdater.start();
-        analyzePage.execute();
+        analyzePage.start();
         connectionState.start();
     }
 

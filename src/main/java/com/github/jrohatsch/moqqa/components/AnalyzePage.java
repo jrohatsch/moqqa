@@ -11,17 +11,23 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
-public class AnalyzePage extends SwingWorker<Void, Void> {
+public class AnalyzePage {
     private final JTable values;
     private final DefaultTableModel valuesModel;
     private final Datahandler datahandler;
     private final TimeUtils timeUtils;
-    private final AtomicBoolean update;
+    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private JPanel monitoredIDs;
     private JPanel frame;
+    private ScheduledExecutorService executor;
+
 
     public AnalyzePage(Datahandler datahandler) {
         this.datahandler = datahandler;
@@ -32,8 +38,8 @@ public class AnalyzePage extends SwingWorker<Void, Void> {
             }
         };
         this.values = new JTable(valuesModel);
-        this.update = new AtomicBoolean(false);
         this.timeUtils = new TimeUtils();
+        this.executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     public JPanel init() {
@@ -56,11 +62,11 @@ public class AnalyzePage extends SwingWorker<Void, Void> {
         topBar.add(timeZoneDropdown);
         timeZoneDropdown.setSelectedItem(timeUtils.getZoneId());
         timeZoneDropdown.addActionListener(a -> {
-            update.set(false);
+            stop();
             String selectedItem = (String) timeZoneDropdown.getSelectedItem();
             timeUtils.select(selectedItem);
             removeAll();
-            update.set(true);
+            start();
         });
 
         topBar.add(createExportButton());
@@ -77,7 +83,7 @@ public class AnalyzePage extends SwingWorker<Void, Void> {
         button.setBackground(ColorUtils.BLUE);
 
         button.addActionListener(action -> {
-            update.set(false);
+            stop();
             String[] linesToWrite = ExportUtils.exportTableDataAsTabSeparatedValues(valuesModel);
             var fileChooser = new JFileChooser();
             var commaFileFilter = new FileNameExtensionFilter("Tab Separated Values (.tsv)", ".tsv");
@@ -103,7 +109,7 @@ public class AnalyzePage extends SwingWorker<Void, Void> {
                     throw new RuntimeException(e);
                 }
             }
-            update.set(true);
+            start();
         });
 
         return button;
@@ -116,20 +122,9 @@ public class AnalyzePage extends SwingWorker<Void, Void> {
         }
     }
 
-    public void stop() {
-        update.set(false);
-    }
-
-    @Override
-    protected Void doInBackground() {
-        // start updating
-        update.set(true);
-
+    protected void update() {
         try {
-            while (true) {
-                if (!update.get()) {
-                    continue;
-                }
+            SwingUtilities.invokeAndWait(() -> {
                 // add all monitored values
                 datahandler.getHistoricValues().forEach(message -> {
                     if (valuesModel.getRowCount() == 0) {
@@ -153,11 +148,29 @@ public class AnalyzePage extends SwingWorker<Void, Void> {
                 }
 
                 monitoredIDs.updateUI();
-                Thread.sleep(100);
+            });
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.warning("update thread interrupted");
+        } catch (InvocationTargetException e) {
+            LOGGER.severe(e.getMessage());
+        }
+    }
+
+    public void start() {
+        stop();
+        executor = Executors.newSingleThreadScheduledExecutor();
+        executor.scheduleWithFixedDelay(this::update, 1, 1, TimeUnit.MILLISECONDS);
+    }
+
+    public void stop() {
+        if (executor != null) {
+            executor.shutdownNow();
+            try {
+                executor.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {
+                System.err.println("could not stop update thread in time");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
         }
     }
 }

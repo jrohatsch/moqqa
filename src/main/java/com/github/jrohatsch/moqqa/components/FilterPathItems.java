@@ -50,19 +50,4 @@ public class FilterPathItems {
 
         return frame;
     }
-
-    private JTextField addTextField(JPanel frame, String description) {
-        JPanel topicFrame = new JPanel();
-        topicFrame.setLayout(new BoxLayout(topicFrame, BoxLayout.X_AXIS));
-        topicFrame.setBorder(new EmptyBorder(new Insets(5, 5, 5, 5)));
-        JLabel label = new JLabel(description);
-        label.setBorder(new EmptyBorder(0,0,0,20));
-        topicFrame.add(label);
-
-        var topicFilter = new JTextField();
-        topicFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, topicFilter.getPreferredSize().height));
-        topicFrame.add(topicFilter);
-        frame.add(topicFrame);
-        return topicFilter;
-    }
 }
