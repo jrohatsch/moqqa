@@ -29,6 +29,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     private JTextArea topicTree;
     private JLabel topicTreeTitle;
     private CopyButton topicTreeCopyButton;
+    private JScrollPane topicTreeScrollPane;
 
     public PathItemInfo(Datahandler dataHandler) {
         this.datahandler = dataHandler;
@@ -109,6 +110,10 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         topicTree = new JTextArea();
         topicTree.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+
+        topicTreeScrollPane = new JScrollPane(topicTree);
+        topicTreeScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         var topicTreeBar = new JPanel();
         topicTreeBar.setLayout(new BoxLayout(topicTreeBar, BoxLayout.X_AXIS));
         topicTreeBar.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -121,7 +126,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         panel.add(buildVerticalSeparator());
         panel.add(topicTreeBar);
         panel.add(buildVerticalSeparator());
-        panel.add(topicTree);
+        panel.add(topicTreeScrollPane);
 
         clear();
 
@@ -150,6 +155,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     @Override
     public void clear() {
         placeHolder.setVisible(true);
+
         fullTopicText.setVisible(false);
         fullTopic.setVisible(false);
         topicCopyButton.setVisible(false);
@@ -159,6 +165,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         trackValueButton.setVisible(false);
         topicTreeTitle.setVisible(false);
         topicTree.setVisible(false);
+        topicTreeScrollPane.setVisible(false);
         topicTreeCopyButton.setVisible(false);
     }
 
@@ -192,7 +199,9 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
                 topicTreeTitle.setVisible(true);
                 topicTreeCopyButton.setVisible(true);
                 topicTree.setText(getTopicTree(fullTopic.getText()));
+                topicTree.setCaretPosition(0);
                 topicTree.setVisible(true);
+                topicTreeScrollPane.setVisible(true);
             }
         });
 
