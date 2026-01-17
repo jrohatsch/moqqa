@@ -6,25 +6,20 @@ import com.github.jrohatsch.moqqa.data.SelectionObserver;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.ui.CopyButton;
 import com.github.jrohatsch.moqqa.utils.ColorUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 
 public class PathItemInfo implements SelectionObserver, PathObserver {
-    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private final Datahandler datahandler;
     private final JLabel fullTopicText = new JLabel("Full Topic:");
     private final JLabel fullTopic = new JLabel();
-    private final JButton topicCopyButton = new JButton("\u2750");
+    private CopyButton topicCopyButton;
     private final JLabel children = new JLabel();
     private final JLabel placeHolder = new JLabel("Select an item to inspect!");
     private String path = "";
@@ -33,9 +28,25 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     private JButton trackValueButton;
     private JTextArea topicTree;
     private JLabel topicTreeTitle;
+    private CopyButton topicTreeCopyButton;
 
     public PathItemInfo(Datahandler dataHandler) {
         this.datahandler = dataHandler;
+    }
+
+    public static void generateTree(JSONObject obj, String prefix, StringBuilder builder) {
+        Iterator<String> keys = obj.keys();
+        while (keys.hasNext()) {
+            String key = keys.next();
+            JSONObject value = obj.getJSONObject(key);
+            boolean nextIsTail = !keys.hasNext();
+
+            builder.append(prefix)
+                    .append(nextIsTail ? "└── " : "├── ")
+                    .append(key)
+                    .append("\n");
+            generateTree(value, prefix + (nextIsTail ? "    " : "│   "), builder);
+        }
     }
 
     public Component init() {
@@ -59,10 +70,8 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         bar.add(fullTopic);
 
         bar.add(buildHorizontalSeparator());
-        topicCopyButton.addActionListener(l -> {
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(new StringSelection(fullTopic.getText()), null);
-        });
+
+        topicCopyButton = new CopyButton(fullTopic::getText);
 
         bar.add(topicCopyButton);
         bar.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -106,7 +115,8 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
 
         topicTreeBar.add(topicTreeTitle);
         topicTreeBar.add(buildHorizontalSeparator());
-        topicTreeBar.add(new CopyButton(()->topicTree.getText()));
+        topicTreeCopyButton = new CopyButton(topicTree::getText);
+        topicTreeBar.add(topicTreeCopyButton);
 
         panel.add(buildVerticalSeparator());
         panel.add(topicTreeBar);
@@ -149,6 +159,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         trackValueButton.setVisible(false);
         topicTreeTitle.setVisible(false);
         topicTree.setVisible(false);
+        topicTreeCopyButton.setVisible(false);
     }
 
     public void show() {
@@ -179,6 +190,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
                 children.setVisible(true);
 
                 topicTreeTitle.setVisible(true);
+                topicTreeCopyButton.setVisible(true);
                 topicTree.setText(getTopicTree(fullTopic.getText()));
                 topicTree.setVisible(true);
             }
@@ -192,37 +204,15 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         show();
     }
 
-    public static void generateTree(Object node, String prefix, StringBuilder builder) {
-        if (node instanceof JSONObject) {
-            JSONObject obj = (JSONObject) node;
-            Iterator<String> keys = obj.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                Object value = obj.get(key);
-                boolean nextIsTail = !keys.hasNext();
-
-                if (value instanceof JSONObject || value instanceof JSONArray) {
-                    builder.append(prefix + (nextIsTail ? "└── " : "├── ") + key + "\n");
-                    generateTree(value, prefix + (nextIsTail ? "    " : "│   "), builder);
-                } else {
-                    builder.append(prefix + (nextIsTail ? "└── " : "├── ") + key + ": " + value + "\n");
-                }
-            }
-        }
-    }
-
     protected JSONObject getJSONObject(String fullTopic) {
         JSONObject jsonObject = new JSONObject();
 
         datahandler.getMessages(message -> message.topic().startsWith(fullTopic))
-                .stream()
                 .forEach(message -> {
                     JSONObject iterateJsonObject = jsonObject;
                     String[] subtopics = message.topic().split("/");
 
-                    for (int i = 0; i < subtopics.length; ++i) {
-                        String eachSubtopic = subtopics[i];
-
+                    for (String eachSubtopic : subtopics) {
                         if (iterateJsonObject.has(eachSubtopic)) {
                             iterateJsonObject = iterateJsonObject.getJSONObject(eachSubtopic);
                         } else {
