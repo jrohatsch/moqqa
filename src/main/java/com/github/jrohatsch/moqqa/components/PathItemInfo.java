@@ -4,16 +4,23 @@ import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.PathObserver;
 import com.github.jrohatsch.moqqa.data.SelectionObserver;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
+import com.github.jrohatsch.moqqa.ui.CopyButton;
 import com.github.jrohatsch.moqqa.utils.ColorUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.Objects;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.logging.Logger;
 
-public class PathItemInfo implements SelectionObserver, PathObserver  {
+
+public class PathItemInfo implements SelectionObserver, PathObserver {
+    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private final Datahandler datahandler;
     private final JLabel fullTopicText = new JLabel("Full Topic:");
     private final JLabel fullTopic = new JLabel();
@@ -24,6 +31,8 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
     private JComponent topicSeparator;
     private JLabel analyzeText;
     private JButton trackValueButton;
+    private JTextArea topicTree;
+    private JLabel topicTreeTitle;
 
     public PathItemInfo(Datahandler dataHandler) {
         this.datahandler = dataHandler;
@@ -46,7 +55,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
         fullTopicText.setFont(fullTopicText.getFont().deriveFont(Font.BOLD));
 
         var bar = new JPanel();
-        bar.setLayout(new BoxLayout(bar,BoxLayout.X_AXIS));
+        bar.setLayout(new BoxLayout(bar, BoxLayout.X_AXIS));
         bar.add(fullTopic);
 
         bar.add(buildHorizontalSeparator());
@@ -63,12 +72,13 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
         panel.add(topicSeparator);
 
         children.setAlignmentX(Component.LEFT_ALIGNMENT);
-        children.setBorder(new EmptyBorder(new Insets(0,0,10,0)));
+        children.setBorder(new EmptyBorder(new Insets(0, 0, 10, 0)));
         panel.add(children);
 
 
         analyzeText = new JLabel("Analyze:");
         analyzeText.setFont(fullTopicText.getFont().deriveFont(Font.BOLD));
+        analyzeText.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         panel.add(analyzeText);
 
@@ -85,23 +95,23 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
 
         panel.add(trackValueButton);
 
-        var printButton = new JButton("Snapshot");
-        printButton.setToolTipText("Copy current values to Clipboard");
-        printButton.addActionListener(l -> {
-            var messages = datahandler.getMessages(message -> message.topic().startsWith(fullTopic.getText()));
-            StringBuilder builder = new StringBuilder();
-            messages.forEach(message -> {
-                builder.append(message.topic());
-                builder.append(" = ");
-                builder.append(message.message());
-                builder.append("\n");
-            });
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(new StringSelection(builder.toString()), null);
-        });
+        topicTreeTitle = new JLabel("Topic Tree:");
+        topicTreeTitle.setFont(topicTreeTitle.getFont().deriveFont(Font.BOLD));
+        topicTree = new JTextArea();
+        topicTree.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        var topicTreeBar = new JPanel();
+        topicTreeBar.setLayout(new BoxLayout(topicTreeBar, BoxLayout.X_AXIS));
+        topicTreeBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        topicTreeBar.add(topicTreeTitle);
+        topicTreeBar.add(buildHorizontalSeparator());
+        topicTreeBar.add(new CopyButton(()->topicTree.getText()));
 
         panel.add(buildVerticalSeparator());
-        panel.add(printButton);
+        panel.add(topicTreeBar);
+        panel.add(buildVerticalSeparator());
+        panel.add(topicTree);
 
         clear();
 
@@ -137,6 +147,8 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
         topicSeparator.setVisible(false);
         analyzeText.setVisible(false);
         trackValueButton.setVisible(false);
+        topicTreeTitle.setVisible(false);
+        topicTree.setVisible(false);
     }
 
     public void show() {
@@ -165,6 +177,10 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
 
             if (item.childTopics() > 0) {
                 children.setVisible(true);
+
+                topicTreeTitle.setVisible(true);
+                topicTree.setText(getTopicTree(fullTopic.getText()));
+                topicTree.setVisible(true);
             }
         });
 
@@ -174,5 +190,57 @@ public class PathItemInfo implements SelectionObserver, PathObserver  {
     public void updatePath(String path) {
         this.path = Objects.requireNonNullElse(path, "");
         show();
+    }
+
+    public static void generateTree(Object node, String prefix, StringBuilder builder) {
+        if (node instanceof JSONObject) {
+            JSONObject obj = (JSONObject) node;
+            Iterator<String> keys = obj.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                Object value = obj.get(key);
+                boolean nextIsTail = !keys.hasNext();
+
+                if (value instanceof JSONObject || value instanceof JSONArray) {
+                    builder.append(prefix + (nextIsTail ? "└── " : "├── ") + key + "\n");
+                    generateTree(value, prefix + (nextIsTail ? "    " : "│   "), builder);
+                } else {
+                    builder.append(prefix + (nextIsTail ? "└── " : "├── ") + key + ": " + value + "\n");
+                }
+            }
+        }
+    }
+
+    protected JSONObject getJSONObject(String fullTopic) {
+        JSONObject jsonObject = new JSONObject();
+
+        datahandler.getMessages(message -> message.topic().startsWith(fullTopic))
+                .stream()
+                .forEach(message -> {
+                    JSONObject iterateJsonObject = jsonObject;
+                    String[] subtopics = message.topic().split("/");
+
+                    for (int i = 0; i < subtopics.length; ++i) {
+                        String eachSubtopic = subtopics[i];
+
+                        if (iterateJsonObject.has(eachSubtopic)) {
+                            iterateJsonObject = iterateJsonObject.getJSONObject(eachSubtopic);
+                        } else {
+                            var newChild = new JSONObject();
+                            iterateJsonObject.put(eachSubtopic, newChild);
+                            iterateJsonObject = newChild;
+                        }
+                    }
+                });
+
+        return jsonObject;
+    }
+
+    protected String getTopicTree(String fullTopic) {
+        var builder = new StringBuilder();
+
+        generateTree(getJSONObject(fullTopic), "", builder);
+
+        return builder.toString();
     }
 }
