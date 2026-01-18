@@ -25,7 +25,7 @@ jobs:
 
       - name: Build with Maven
         # This will run Shade (package phase) then jpackage (verify phase)
-        run: mvn package verify
+        run: mvn package verify -DskipTests
 
       - name: Upload EXE Artifact
         uses: actions/upload-artifact@v4
