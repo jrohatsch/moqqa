@@ -6,7 +6,7 @@
 
     <groupId>com.github.jrohatsch</groupId>
     <artifactId>moqqa</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -45,6 +45,31 @@
                                     <mainClass>com.github.jrohatsch.moqqa.Main</mainClass>
                                 </transformer>
                             </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.panteleyev</groupId>
+                <artifactId>jpackage-maven-plugin</artifactId>
+                <version>1.7.3</version>
+                <executions>
+                    <execution>
+                        <id>jpackage</id>
+                        <phase>verify</phase> <goals>
+                        <goal>jpackage</goal>
+                    </goals>
+                        <configuration>
+                            <name>Moqqa</name>
+                            <input>target</input>
+                            <mainJar>moqqa-1.0.0.jar</mainJar>
+                            <mainClass>com.github.jrohatsch.moqqa.Main</mainClass>
+                            <vendor>Johannes Rohatsch</vendor>
+                            <winShortcut>true</winShortcut>
+                            <winMenu>true</winMenu>
+                            <destination>target/dist</destination>
+                            <runtimeImage>${java.home}</runtimeImage>
                         </configuration>
                     </execution>
                 </executions>
