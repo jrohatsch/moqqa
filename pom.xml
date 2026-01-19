@@ -62,14 +62,15 @@
                     </goals>
                         <configuration>
                             <name>Moqqa</name>
-                            <input>target</input>
+                            <input>target/jpackage-input</input>
                             <mainJar>moqqa-1.0.0.jar</mainJar>
                             <mainClass>com.github.jrohatsch.moqqa.Main</mainClass>
                             <vendor>Johannes Rohatsch</vendor>
                             <winShortcut>true</winShortcut>
                             <winMenu>true</winMenu>
-                            <destination>target/dist</destination>
+                            <destination>target/jpackage-output</destination>
                             <runtimeImage>${java.home}</runtimeImage>
+                            <winConsole>true</winConsole>
                         </configuration>
                     </execution>
                 </executions>

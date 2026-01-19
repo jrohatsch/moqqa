@@ -23,12 +23,17 @@ jobs:
         # jpackage uses WiX to create the actual installer package
         run: dotnet tool install --global wix
 
-      - name: Build with Maven
-        # This will run Shade (package phase) then jpackage (verify phase)
-        run: mvn package verify -DskipTests
+      - name: Build Fat Jar
+        run: mvn package -DskipTests
+
+      - name: Copy Fat Jar
+        run: mv moqqa-1.0.0.jar target/jpackage-input/moqqa-1.0.0.jar
+
+      - name: Build EXE
+        run: mvn verify -DskipTests
 
       - name: Upload EXE Artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-app-installer
-          path: target/dist/*.exe
+          path: target/jpackage-output/*.exe
