@@ -27,7 +27,9 @@ jobs:
         run: mvn package -DskipTests
 
       - name: Copy Fat Jar
-        run: mv target\moqqa-1.0.0.jar target\jpackage-input\moqqa-1.0.0.jar
+        run: |
+          mkdir .\target\jpackage-input
+          mv .\target\moqqa-1.0.0.jar .\target\jpackage-input\moqqa-1.0.0.jar
 
       - name: Build EXE
         run: mvn verify -DskipTests
