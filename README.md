@@ -1,26 +1,34 @@
 ## Demo
 
-### Browse
-![](https://github.com/jrohatsch/media_store/blob/master/moqqa-browser.gif)
+### Create Sessions
+![](https://github.com/jrohatsch/media_store/blob/master/moqqa/sessions.gif)
 
-### Analyze
-![](https://github.com/jrohatsch/media_store/blob/master/moqqa-analyze.gif)
+### Analyze Values
+![](https://github.com/jrohatsch/media_store/blob/master/moqqa/analyze.gif)
+
+### Publish Values
+![](https://github.com/jrohatsch/media_store/blob/master/moqqa/publish.gif)
+
+### Filter & Browse MQTT Tree
+![](https://github.com/jrohatsch/media_store/blob/master/moqqa/filter.gif)
 
 
 
+## Run the App
+### Linux 
 
-## Builds
+Download the latest linux AppImage --> [linux-app-image.zip](https://github.com/jrohatsch/moqqa/releases/download/v1.0.0/linux-app-image.zip)
 
-Builds are packaged with jpackage tool for Windows and Linux. For Mac users run the .jar file with
+### Windows 
 
+Download the latest windows installer --> [windows-app-installer.zip](https://github.com/jrohatsch/moqqa/releases/download/v1.0.0/windows-app-installer.zip)
+
+### Platformidependent
+
+Download the latest packed jar-Archive --> [packaged-jar.zip](https://github.com/jrohatsch/moqqa/releases/download/v1.0.0/packaged-jar.zip)
+
+and run it with
+
+```bash
+java -jar moqqa-{version}.jar
 ```
-java -jar moqqa.jar
-```
-
-### Linux Install (Debian based)
-
-dpkg-deb -x ./main_1.0-1_amd64.deb /home/{USER}/moqqa
-
-## Windows Install
-
-TODO
