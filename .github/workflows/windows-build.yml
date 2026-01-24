@@ -1,8 +1,8 @@
-name: Build Bundled Windows EXE
+name: Build Windows Installer
 
 on:
   push:
-    branches: [ main ]
+    tags: [ v*.*.* ]
 
 jobs:
   build:
@@ -39,3 +39,4 @@ jobs:
         with:
           name: windows-app-installer
           path: target/jpackage-output/*
+          retention-days: 1
