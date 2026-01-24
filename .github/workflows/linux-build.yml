@@ -1,0 +1,45 @@
+name: Build Linux AppImage and packaged jar
+
+on:
+  push:
+    tags: [ * ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build Fat Jar
+        run: mvn package -DskipTests
+
+      - name: Copy Fat Jar
+        run: |
+          mkdir ./target/jpackage-input
+          mv ./target/moqqa-1.0.0.jar ./target/jpackage-input/moqqa-1.0.0.jar
+
+      - name: Build Linux AppImage
+        run: mvn jpackage:jpackage@linux
+
+      - name: Upload Output
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-app-image
+          path: target/jpackage-output/*
+          retention-days: 1
+
+      - name: Upload jar file
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-jar
+          path: target/jpackage-input/moqqa-1.0.0.jar
+          retention-days: 1
