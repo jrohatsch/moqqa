@@ -2,7 +2,7 @@ name: Build Linux AppImage and packaged jar
 
 on:
   push:
-    tags: [ * ]
+    branch: [ main ]
 
 jobs:
   build:
