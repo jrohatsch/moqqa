@@ -29,11 +29,11 @@ jobs:
       - name: Copy Fat Jar
         run: mv moqqa-1.0.0.jar target/jpackage-input/moqqa-1.0.0.jar
 
-      - name: Build EXE
-        run: mvn verify -DskipTests
+      - name: Build MSI Installer
+        run: mvn jpackage:jpackage@win
 
-      - name: Upload EXE Artifact
+      - name: Upload Output
         uses: actions/upload-artifact@v4
         with:
           name: windows-app-installer
-          path: target/jpackage-output/*.exe
+          path: target/jpackage-output/*
