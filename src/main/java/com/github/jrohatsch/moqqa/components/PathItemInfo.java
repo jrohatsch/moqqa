@@ -6,6 +6,7 @@ import com.github.jrohatsch.moqqa.data.SelectionObserver;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.ui.CopyButton;
 import com.github.jrohatsch.moqqa.utils.ColorUtils;
+import com.github.jrohatsch.moqqa.utils.TextUtils;
 import org.json.JSONObject;
 
 import javax.swing.*;
@@ -21,7 +22,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     private final JLabel fullTopic = new JLabel();
     private CopyButton topicCopyButton;
     private final JLabel children = new JLabel();
-    private final JLabel placeHolder = new JLabel("Select an item to inspect!");
+    private final JLabel placeHolder = new JLabel(TextUtils.getText("label.pathitemInfoPlaceholder"));
     private String path = "";
     private JComponent topicSeparator;
     private JLabel analyzeText;

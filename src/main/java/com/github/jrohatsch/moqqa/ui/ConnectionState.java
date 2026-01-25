@@ -2,6 +2,7 @@ package com.github.jrohatsch.moqqa.ui;
 
 import com.github.jrohatsch.moqqa.data.MqttConnector;
 import com.github.jrohatsch.moqqa.utils.ColorUtils;
+import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
@@ -12,6 +13,9 @@ import java.util.concurrent.TimeUnit;
 public class ConnectionState extends JLabel {
     private final MqttConnector connector;
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private String connected = TextUtils.getText("label.connected");
+    private String disconnected = TextUtils.getText("label.disconnected");
+
 
     public ConnectionState(MqttConnector connector) {
         this.connector = connector;
@@ -22,7 +26,7 @@ public class ConnectionState extends JLabel {
             try {
                 SwingUtilities.invokeAndWait(() -> {
                     boolean isConnected = connector.isConnected();
-                    setText(isConnected ? " Connected" : " Disconnected!");
+                    setText(isConnected ? connected : disconnected);
                     setForeground(isConnected ? ColorUtils.BLUE : ColorUtils.RED);
                 });
             } catch (InterruptedException | InvocationTargetException e) {
