@@ -48,6 +48,9 @@ public class UserInterface {
                 }
             }
         });
+
+        Image icon = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/images/moqqa.png"));
+        Taskbar.getTaskbar().setIconImage(icon);
     }
 
     private void addConnectionPanel() {
