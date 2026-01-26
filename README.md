@@ -1,4 +1,5 @@
-## Demo
+![](src/main/resources/images/moqqa.png)
+## Features
 
 ### Create Sessions
 ![](https://github.com/jrohatsch/media_store/blob/master/moqqa/sessions.gif)
@@ -11,7 +12,6 @@
 
 ### Filter & Browse MQTT Tree
 ![](https://github.com/jrohatsch/media_store/blob/master/moqqa/filter.gif)
-
 
 
 ## Run the App
