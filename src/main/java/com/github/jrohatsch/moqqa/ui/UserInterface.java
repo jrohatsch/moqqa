@@ -10,8 +10,10 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 public class UserInterface {
+    private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private final Datahandler dataHandler;
     private JFrame frame;
     private ConnectionPanel connectionPanel;
@@ -49,8 +51,21 @@ public class UserInterface {
             }
         });
 
-        Image icon = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/images/moqqa.png"));
-        Taskbar.getTaskbar().setIconImage(icon);
+        setIcon();
+    }
+
+    private void setIcon() {
+        try {
+            Image icon = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/images/moqqa.png"));
+            String os = System.getProperty("os.name");
+
+            if (os.toLowerCase().contains("mac")) {
+                Taskbar.getTaskbar().setIconImage(icon);
+            }
+            frame.setIconImage(icon);
+        } catch (Exception e) {
+            LOGGER.warning("could not set icon");
+        }
     }
 
     private void addConnectionPanel() {
