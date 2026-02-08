@@ -6,7 +6,7 @@
 
     <groupId>com.github.jrohatsch</groupId>
     <artifactId>moqqa</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -16,8 +16,9 @@
 
 
     <build>
+        <!-- omit the version in the file name -->
+        <finalName>moqqa</finalName>
         <plugins>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -46,7 +47,7 @@
                 <configuration>
                     <name>Moqqa</name>
                     <input>target/jpackage-input</input>
-                    <mainJar>moqqa-1.0.0.jar</mainJar>
+                    <mainJar>moqqa.jar</mainJar>
                     <mainClass>com.github.jrohatsch.moqqa.Main</mainClass>
                     <vendor>Johannes Rohatsch</vendor>
                     <winShortcut>true</winShortcut>
@@ -54,6 +55,7 @@
                     <destination>target/jpackage-output</destination>
                     <runtimeImage>${java.home}</runtimeImage>
                     <icon>src/main/resources/images/moqqa.png</icon>
+                    <appVersion>${project.version}</appVersion>
                 </configuration>
 
                 <executions>

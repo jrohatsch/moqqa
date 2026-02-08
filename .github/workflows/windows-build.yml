@@ -29,7 +29,7 @@ jobs:
       - name: Copy Fat Jar
         run: |
           mkdir .\target\jpackage-input
-          mv .\target\moqqa-1.0.0.jar .\target\jpackage-input\moqqa-1.0.0.jar
+          mv .\target\moqqa.jar .\target\jpackage-input\moqqa.jar
 
       - name: Build MSI Installer
         run: mvn jpackage:jpackage@win
