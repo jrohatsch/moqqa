@@ -5,6 +5,7 @@ import com.github.jrohatsch.moqqa.data.PathObserver;
 import com.github.jrohatsch.moqqa.data.SelectionObserver;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.ui.CopyButton;
+import com.github.jrohatsch.moqqa.ui.DeleteButton;
 import com.github.jrohatsch.moqqa.utils.ColorUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 import org.json.JSONObject;
@@ -31,6 +32,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     private JLabel topicTreeTitle;
     private CopyButton topicTreeCopyButton;
     private JScrollPane topicTreeScrollPane;
+    private DeleteButton deleteButton;
 
     public PathItemInfo(Datahandler dataHandler) {
         this.datahandler = dataHandler;
@@ -73,9 +75,16 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
 
         bar.add(buildHorizontalSeparator());
 
-        topicCopyButton = new CopyButton(fullTopic::getText);
+        topicCopyButton = new CopyButton(fullTopic::getText, TextUtils.getText("tooltip.copyTopic"));
 
         bar.add(topicCopyButton);
+
+        deleteButton = new DeleteButton(datahandler, fullTopic::getText);
+
+        bar.add(buildHorizontalSeparator());
+
+        bar.add(deleteButton);
+
         bar.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(bar);
         topicSeparator = buildVerticalSeparator();
@@ -121,7 +130,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
 
         topicTreeBar.add(topicTreeTitle);
         topicTreeBar.add(buildHorizontalSeparator());
-        topicTreeCopyButton = new CopyButton(topicTree::getText);
+        topicTreeCopyButton = new CopyButton(topicTree::getText, TextUtils.getText("tooltip.copyTopicTree"));
         topicTreeBar.add(topicTreeCopyButton);
 
         panel.add(buildVerticalSeparator());
@@ -160,6 +169,8 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         fullTopicText.setVisible(false);
         fullTopic.setVisible(false);
         topicCopyButton.setVisible(false);
+        deleteButton.setVisible(false);
+
         children.setVisible(false);
         topicSeparator.setVisible(false);
         analyzeText.setVisible(false);
@@ -175,6 +186,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         fullTopicText.setVisible(true);
         fullTopic.setVisible(true);
         topicCopyButton.setVisible(true);
+        deleteButton.setVisible(true);
         topicSeparator.setVisible(true);
 
         analyzeText.setVisible(false);

@@ -94,9 +94,9 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
         var mqttMessage = new MqttMessage(message.getBytes());
         mqttMessage.setRetained(retained);
         try {
-            client.publish(topic, mqttMessage);
+            client.publish(topic, mqttMessage).waitForCompletion();
         } catch (MqttException e) {
-            System.err.println("failed to publish message");
+            LOGGER.warning("failed to publish message, %s".formatted(e.getMessage()));
         }
     }
 
