@@ -1,6 +1,5 @@
 package com.github.jrohatsch.moqqa.domain;
 
-import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Optional;
@@ -20,7 +19,7 @@ public record PathListItem(String topic, Optional<String> value, long childTopic
                 if (new ObjectMapper().readTree(value).isNumber()) {
                     return PathListItemType.NUMBER;
                 }
-            } catch (StreamReadException ignored) {
+            } catch (Exception ignored) {
 
             }
         }
