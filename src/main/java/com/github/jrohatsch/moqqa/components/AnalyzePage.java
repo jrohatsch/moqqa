@@ -9,6 +9,8 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -38,8 +40,59 @@ public class AnalyzePage {
             }
         };
         this.values = new JTable(valuesModel);
+
+        addRightClickContextMenu(datahandler);
+
         this.timeUtils = new TimeUtils();
         this.executor = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    private void addRightClickContextMenu(Datahandler datahandler) {
+        values.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON3) {
+                    try {
+                        JTable table = (JTable) e.getSource();
+                        int row = table.getSelectedRow();
+                        String topic = (String) table.getValueAt(row, 0);
+                        LOGGER.info("Clicked Row %d".formatted(row));
+
+                        var popMenu = new JPopupMenu();
+                        var untrackItem = new JMenuItem("Untrack topic");
+
+                        untrackItem.addActionListener(a -> {
+                            datahandler.forgetMonitoredValue(topic);
+                        });
+
+                        popMenu.add(untrackItem);
+                        popMenu.show(table, e.getX(), e.getY());
+                    } catch (Exception ignored) {
+
+                    }
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
     }
 
     public JPanel init() {
@@ -105,6 +158,7 @@ public class AnalyzePage {
                         }
                     });
                     fileWriter.flush();
+                    fileWriter.close();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

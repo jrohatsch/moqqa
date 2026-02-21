@@ -198,6 +198,7 @@ public class DatahandlerImpl implements Datahandler {
     @Override
     public void clear() {
         data.clear();
+        monitored.clear();
     }
 
     @Override

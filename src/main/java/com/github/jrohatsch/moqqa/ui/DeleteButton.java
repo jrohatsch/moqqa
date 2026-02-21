@@ -6,7 +6,6 @@ import com.github.jrohatsch.moqqa.utils.ColorUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
-import java.awt.*;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Predicate;
