@@ -85,7 +85,7 @@ public class MainPanel {
         JTabbedPane tabbedPane = new JTabbedPane();
 
         analyzePage = new AnalyzePage(dataHandler);
-        pathItemInfo = new PathItemInfo(dataHandler);
+        pathItemInfo = new PathItemInfo(dataHandler, pathItemsPane);
 
         tabbedPane.add("Info", pathItemInfo.init());
         tabbedPane.add(TextUtils.getText("label.history"), analyzePage.init());

@@ -33,6 +33,12 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     private CopyButton topicTreeCopyButton;
     private JScrollPane topicTreeScrollPane;
     private DeleteButton deleteButton;
+    private JComponent toolTipParent;
+
+    public PathItemInfo(Datahandler dataHandler, JComponent toolTipParent) {
+        this.datahandler = dataHandler;
+        this.toolTipParent = toolTipParent;
+    }
 
     public PathItemInfo(Datahandler dataHandler) {
         this.datahandler = dataHandler;
@@ -79,7 +85,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
 
         bar.add(topicCopyButton);
 
-        deleteButton = new DeleteButton(datahandler, fullTopic::getText);
+        deleteButton = new DeleteButton(datahandler, fullTopic::getText, toolTipParent);
 
         bar.add(buildHorizontalSeparator());
 

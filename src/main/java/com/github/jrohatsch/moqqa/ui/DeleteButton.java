@@ -8,6 +8,8 @@ import com.github.jrohatsch.moqqa.utils.TextUtils;
 import javax.swing.*;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -15,7 +17,10 @@ import java.util.logging.Logger;
 public class DeleteButton extends JButton {
     private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
 
-    public DeleteButton(Datahandler datahandler, Supplier<String> topicSupplier) {
+    private final ExecutorService executorService;
+
+    public DeleteButton(Datahandler datahandler, Supplier<String> topicSupplier, JComponent toolTipParent) {
+        executorService = Executors.newSingleThreadExecutor();
 
         // Wastebasket unicode
         setText(Character.toString(128465));
@@ -33,11 +38,15 @@ public class DeleteButton extends JButton {
 
             LOGGER.info("Deleting %d messages".formatted(messagesToDelete.size()));
 
-            messagesToDelete.forEach(message -> {
-                datahandler.connector().publish(message.topic(), "", true);
-            });
+            var popupWhileDeleting = ToolTipPopup.bottomRightCorner(toolTipParent, TextUtils.getText("tooltip.whileDelete").formatted(messagesToDelete.size()), Duration.ZERO);
 
-            new ToolTipPopup(this, TextUtils.getText("tooltip.afterDelete").formatted(messagesToDelete.size()), Duration.ofSeconds(3));
+            executorService.submit(() -> {
+                messagesToDelete.forEach(message -> {
+                    datahandler.connector().publish(message.topic(), "", true);
+                });
+                popupWhileDeleting.hide();
+                ToolTipPopup.bottomRightCorner(toolTipParent, TextUtils.getText("tooltip.afterDelete").formatted(messagesToDelete.size()), Duration.ofSeconds(3));
+            });
         });
     }
 

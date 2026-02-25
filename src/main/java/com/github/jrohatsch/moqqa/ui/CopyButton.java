@@ -17,7 +17,7 @@ public class CopyButton extends JButton {
         addActionListener(a -> {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(new StringSelection(toCopy.get()), null);
-            new ToolTipPopup(this, TextUtils.getText("tooltip.afterCopy"), Duration.ofSeconds(3));
+            ToolTipPopup.bottomOutside(this, TextUtils.getText("tooltip.afterCopy"), Duration.ofSeconds(3));
         });
     }
 
