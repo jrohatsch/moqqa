@@ -12,6 +12,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.io.File;
+import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +67,7 @@ public class ConnectionPanel {
         panel.add(sessionNameTextField, gc);
 
         // load session
-        var session = sessionHandler.get(sessionName).orElse(Session.anonymous("New Session", "localhost:1883"));
+        var session = sessionHandler.get(sessionName).orElse(Session.anonymous("New Session", "localhost:1883", Instant.EPOCH));
 
 
         gc.gridx = 0;
@@ -180,7 +181,7 @@ public class ConnectionPanel {
                 sessionHandler.save(Session.certPath(sessionNameTextField.getText(), address.getText(), serverCertificatePath.get()));
             } else {
                 // save session details
-                sessionHandler.save(Session.anonymous(sessionNameTextField.getText(), address.getText()));
+                sessionHandler.save(Session.anonymous(sessionNameTextField.getText(), address.getText(), Instant.now()));
             }
 
             // check authentication

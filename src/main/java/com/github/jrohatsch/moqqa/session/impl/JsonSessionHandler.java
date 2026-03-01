@@ -8,16 +8,16 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.*;
+import java.util.logging.Logger;
 
 public class JsonSessionHandler implements SessionHandler {
     private final Path folderPath = Path.of(System.getProperty("user.home"), "moqqa");
     private final Path settingsFilePath = Path.of(System.getProperty("user.home"), "moqqa", "sessions.json");
     private final ObjectMapper mapper = new ObjectMapper();
     final List<Session> sessions = new ArrayList<>();
+    private final Logger LOGGER = Logger.getLogger(JsonSessionHandler.class.getName());
 
     @Override
     public void save(Session session) {
@@ -38,6 +38,21 @@ public class JsonSessionHandler implements SessionHandler {
         mapper.writeValue(settingsFilePath.toFile(), sessions);
     }
 
+
+    String readString(String key, Map<String, Object> map, String defaultValue) {
+        try {
+            if (map.containsKey(key) && map.get(key) != null && map.get(key) != "") {
+                return (String) map.get(key);
+            } else {
+                LOGGER.warning("key %s is empty! using default value %s".formatted(key, defaultValue));
+                return defaultValue;
+            }
+        } catch (ClassCastException e) {
+            LOGGER.warning("could not cast value of key %s to String!%n".formatted(key));
+            return defaultValue;
+        }
+    }
+
     public List<Session> load() {
         sessions.clear();
 
@@ -45,8 +60,9 @@ public class JsonSessionHandler implements SessionHandler {
             List<Map<String,Object>> read = mapper.readValue(settingsFilePath.toFile(), List.class);
 
             for (Map<String,Object> map : read) {
-                String name = (String) map.get("name");
-                String address = (String) map.get("address");
+                String name = readString("name", map, "Unnamed Session");
+                String address = readString("address", map, "localhost");
+                Instant connection = Instant.parse(readString("connect", map, Instant.EPOCH.toString()));
 
                 if (map.containsKey("authentication")) {
                     Map<String, String> auth = (Map<String, String>) map.get("authentication");
@@ -61,15 +77,18 @@ public class JsonSessionHandler implements SessionHandler {
                             String certPath = auth.get("certPath");
                             sessions.add(Session.certPath(name, address, certPath));
                         } else if (AuthenticationType.ANONYMOUS.name().equals(type)) {
-                            sessions.add(Session.anonymous(name, address));
+                            sessions.add(Session.anonymous(name, address, connection));
                         }
                     } else {
-                        sessions.add(Session.anonymous(name, address));
+                        sessions.add(Session.anonymous(name, address, connection));
                     }
                 }
 
             }
         }
+
+        sessions.sort(Comparator.comparing(Session::connect).reversed());
+
          return new ArrayList<>(sessions);
     }
 
