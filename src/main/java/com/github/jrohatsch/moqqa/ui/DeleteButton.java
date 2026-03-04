@@ -2,10 +2,13 @@ package com.github.jrohatsch.moqqa.ui;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.Message;
+import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.utils.ColorUtils;
+import com.github.jrohatsch.moqqa.utils.IconUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
+import java.awt.*;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -22,8 +25,9 @@ public class DeleteButton extends JButton {
     public DeleteButton(Datahandler datahandler, Supplier<String> topicSupplier, JComponent toolTipParent) {
         executorService = Executors.newSingleThreadExecutor();
 
-        // Wastebasket unicode
-        setText(Character.toString(128465));
+
+        setIcon(IconUtils.get("trash.svg", new Dimension(18,18)));
+
         setBackground(ColorUtils.RED);
 
         setToolTipText(TextUtils.getText("tooltip.deleteButton"));

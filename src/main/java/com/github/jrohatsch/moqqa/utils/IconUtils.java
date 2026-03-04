@@ -28,7 +28,7 @@ public class IconUtils {
         return instance;
     }
 
-    public static Image getSVGImage(URL url, int width, int height) {
+    private Image getSVGImage(URL url, int width, int height) {
         SVGLoader loader = getInstance().svgLoader;
         SVGDocument document = loader.load(url);
 
@@ -36,34 +36,42 @@ public class IconUtils {
             return null;
         }
 
-        // create empty transparent image
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        // scale up for better quality when scaling down later
+        int scale = 2;
+        BufferedImage image = new BufferedImage(width * scale, height * scale, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
-        // render svg element on image
-        document.render(null, g, new ViewBox(0,0, width,height));
+        document.render(null, g, new ViewBox(0, 0, width * scale, height * scale));
 
         g.dispose();
-        return image;
+
+        // scale back down to desired size
+        BufferedImage scaledImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = scaledImage.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2.drawImage(image, 0, 0, width, height, null);
+        g2.dispose();
+
+        return scaledImage;
     }
+
 
     public static Icon get(String imageName, Dimension dimension) {
         var instance = getInstance();
 
-        if (instance.loaded.containsKey(imageName + dimension)) {
-            return instance.loaded.get(imageName + dimension);
+        if (!instance.loaded.containsKey(imageName + dimension)) {
+            instance.LOGGER.info("loading image %s with dimension %s".formatted(imageName, dimension));
+            var image = instance.getSVGImage(IconUtils.class.getResource("/images/" + imageName), dimension.width, dimension.height);
+
+            instance.loaded.put(imageName + dimension, new ImageIcon(image));
         }
 
-        instance.LOGGER.info("loading image %s with dimension %s".formatted(imageName, dimension));
-        var image = getSVGImage(IconUtils.class.getResource("/images/" + imageName), 24, 24);
-
-        instance.loaded.put(imageName + dimension, new ImageIcon(image));
-
-        return instance.loaded.get(imageName);
+        return instance.loaded.get(imageName + dimension);
     }
 }
