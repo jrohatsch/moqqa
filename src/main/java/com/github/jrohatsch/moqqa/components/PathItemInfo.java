@@ -8,6 +8,8 @@ import com.github.jrohatsch.moqqa.ui.CopyButton;
 import com.github.jrohatsch.moqqa.ui.DeleteButton;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 import org.json.JSONObject;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -20,12 +22,11 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     private final Datahandler datahandler;
     private final JLabel fullTopicText = new JLabel("Topic:");
     private final JLabel fullTopic = new JLabel();
-    private CopyButton topicCopyButton;
     private final JLabel children = new JLabel();
     private final JLabel placeHolder = new JLabel(TextUtils.getText("label.pathitemInfoPlaceholder"));
+    private CopyButton topicCopyButton;
     private String path = "";
     private JComponent topicSeparator;
-    private JLabel analyzeText;
     private JButton trackValueButton;
     private JTextArea topicTree;
     private JLabel topicTreeTitle;
@@ -33,6 +34,10 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     private JScrollPane topicTreeScrollPane;
     private DeleteButton deleteButton;
     private JComponent toolTipParent;
+    private JTextArea valueField;
+    private JLabel valueTitle;
+    private JScrollPane valueFieldScrollPane;
+    private JButton valueCopyButton;
 
     public PathItemInfo(Datahandler dataHandler, JComponent toolTipParent) {
         this.datahandler = dataHandler;
@@ -56,6 +61,13 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
                     .append("\n");
             generateTree(value, prefix + (nextIsTail ? "    " : "|   "), builder);
         }
+    }
+
+    private JLabel createTitle(String title) {
+        JLabel label = new JLabel(title);
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
     }
 
     public Component init() {
@@ -101,11 +113,26 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         panel.add(children);
 
 
-        analyzeText = new JLabel("Analyze:");
-        analyzeText.setFont(fullTopicText.getFont().deriveFont(Font.BOLD));
-        analyzeText.setAlignmentX(Component.LEFT_ALIGNMENT);
+        valueTitle = createTitle("Value:");
 
-        panel.add(analyzeText);
+        var valueTitleBar = new JPanel();
+        valueTitleBar.setLayout(new BoxLayout(valueTitleBar, BoxLayout.X_AXIS));
+        valueTitleBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        valueTitleBar.add(valueTitle);
+        valueTitleBar.add(buildHorizontalSeparator());
+        valueCopyButton = new CopyButton(() -> valueField.getText(), TextUtils.getText("tooltip.copyValue"));
+        valueTitleBar.add(valueCopyButton);
+
+        panel.add(valueTitleBar);
+
+        valueField = new JTextArea();
+        valueField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        valueField.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        valueFieldScrollPane = new JScrollPane(valueField);
+        valueFieldScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        panel.add(valueFieldScrollPane);
 
         trackValueButton = new JButton("Track value");
         trackValueButton.addActionListener(l -> {
@@ -118,10 +145,10 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
             show();
         });
 
-        panel.add(trackValueButton);
+        valueTitleBar.add(buildHorizontalSeparator());
+        valueTitleBar.add(trackValueButton);
 
-        topicTreeTitle = new JLabel("Topic Tree:");
-        topicTreeTitle.setFont(topicTreeTitle.getFont().deriveFont(Font.BOLD));
+        topicTreeTitle = createTitle("Topic tree:");
         topicTree = new JTextArea();
         topicTree.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -160,6 +187,23 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         return separator;
     }
 
+    private void adjustTextAreaHeight(JTextArea textArea, JScrollPane scrollPane) {
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+
+        // Calculate preferred size based on content
+        int preferredHeight = (int) textArea.getPreferredSize().getHeight();
+        if (preferredHeight == 0) {
+            // If no height calculated, use line count
+            int lineCount = Math.max(textArea.getLineCount(), 1);
+            preferredHeight = lineCount * textArea.getFontMetrics(textArea.getFont()).getHeight() + 10;
+        }
+
+        // Set scroll pane to match text area height
+        scrollPane.setPreferredSize(new Dimension(scrollPane.getWidth(), preferredHeight));
+        scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, preferredHeight));
+    }
+
     @Override
     public void update(PathListItem selection) {
         fullTopic.setText(path + selection.topic());
@@ -167,57 +211,88 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         show();
     }
 
+    private void setVisibleValueComponents(boolean visible) {
+        valueTitle.setVisible(visible);
+        valueField.setVisible(visible);
+        valueCopyButton.setVisible(visible);
+        trackValueButton.setVisible(visible);
+        valueFieldScrollPane.setVisible(visible);
+    }
+
+    private void setVisibleTopicTreeComponents(boolean visible) {
+        topicTreeTitle.setVisible(visible);
+        topicTree.setVisible(visible);
+        topicTreeScrollPane.setVisible(visible);
+        topicTreeCopyButton.setVisible(visible);
+    }
+
+    private void setVisibleTopicComponents(boolean visible) {
+        fullTopicText.setVisible(visible);
+        fullTopic.setVisible(visible);
+        topicCopyButton.setVisible(visible);
+        deleteButton.setVisible(visible);
+        topicSeparator.setVisible(visible);
+    }
+
     @Override
     public void clear() {
         placeHolder.setVisible(true);
 
-        fullTopicText.setVisible(false);
-        fullTopic.setVisible(false);
-        topicCopyButton.setVisible(false);
-        deleteButton.setVisible(false);
+        setVisibleTopicComponents(false);
 
         children.setVisible(false);
-        topicSeparator.setVisible(false);
-        analyzeText.setVisible(false);
-        trackValueButton.setVisible(false);
-        topicTreeTitle.setVisible(false);
-        topicTree.setVisible(false);
-        topicTreeScrollPane.setVisible(false);
-        topicTreeCopyButton.setVisible(false);
+        setVisibleValueComponents(false);
+        setVisibleTopicTreeComponents(false);
+    }
+
+    private void handleValuePresent(String value) {
+        if (datahandler.isMonitored(fullTopic.getText())) {
+            trackValueButton.setText("Untrack value");
+        } else {
+            trackValueButton.setText("Track value");
+        }
+
+        String valueText = value;
+
+        try {
+            JsonNode jsonValue = new ObjectMapper().readTree(value);
+            if (jsonValue.isObject()) {
+                var jsonObject = new JSONObject(value);
+                valueText = jsonObject.toString(10);
+            }
+        } catch (Exception ignored) {
+
+        }
+
+        valueField.setText(valueText);
+        adjustTextAreaHeight(valueField, valueFieldScrollPane);
+        setVisibleValueComponents(true);
+    }
+
+    private void handleValueMissing() {
+        setVisibleValueComponents(false);
     }
 
     public void show() {
         placeHolder.setVisible(false);
-        fullTopicText.setVisible(true);
-        fullTopic.setVisible(true);
-        topicCopyButton.setVisible(true);
-        deleteButton.setVisible(true);
-        topicSeparator.setVisible(true);
 
-        analyzeText.setVisible(false);
-        trackValueButton.setVisible(false);
-        children.setVisible(false);
 
         datahandler.getSelectedItem().ifPresent(item -> {
-            item.value().ifPresent(v -> {
-                analyzeText.setVisible(true);
-                if (datahandler.isMonitored(fullTopic.getText())) {
-                    trackValueButton.setText("Untrack value");
-                } else {
-                    trackValueButton.setText("Track value");
-                }
-                trackValueButton.setVisible(true);
-            });
+
+            setVisibleTopicComponents(true);
+
+            item.value().ifPresentOrElse(this::handleValuePresent, this::handleValueMissing);
 
             if (item.childTopics() > 0) {
                 children.setVisible(true);
 
-                topicTreeTitle.setVisible(true);
-                topicTreeCopyButton.setVisible(true);
                 topicTree.setText(getTopicTree(fullTopic.getText()));
                 topicTree.setCaretPosition(0);
-                topicTree.setVisible(true);
-                topicTreeScrollPane.setVisible(true);
+                adjustTextAreaHeight(topicTree, topicTreeScrollPane);
+                setVisibleTopicTreeComponents(true);
+            } else {
+                children.setVisible(false);
+                setVisibleTopicTreeComponents(false);
             }
         });
 

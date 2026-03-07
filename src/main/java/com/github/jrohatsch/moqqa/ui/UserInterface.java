@@ -34,9 +34,18 @@ public class UserInterface {
     public void show() {
         // setup steps
         Map<String, String> extra = new HashMap<>();
-        extra.put("@accentColor", "#38BDF8");      // Light Blue for highlighting elements
-        extra.put("@background", "#0F172A");       // Deep Navy as main Background
-        extra.put("@selectionBackground", "#334155"); // Slate Gray for selected items
+
+        extra.put("@background", "#060A09");
+        extra.put("@componentBackground", "#0D1614");
+        extra.put("@canvas", "#060A09");
+
+        extra.put("@accentColor", "#10B981");
+        extra.put("@selectionBackground", "#132F2A");
+        extra.put("@selectionForeground", "#10B981");
+
+        extra.put("@focusColor", "#059669");
+
+        FlatLaf.setGlobalExtraDefaults(extra);
 
         FlatLaf.setGlobalExtraDefaults(extra);
         FlatDarculaLaf.setup();
