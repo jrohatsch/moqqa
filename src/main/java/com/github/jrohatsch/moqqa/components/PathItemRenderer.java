@@ -5,6 +5,7 @@ import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.utils.IconUtils;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class PathItemRenderer extends DefaultListCellRenderer {
@@ -30,7 +31,9 @@ public class PathItemRenderer extends DefaultListCellRenderer {
 
         String image = mapImage((PathListItem) value);
 
-        setIcon(IconUtils.get(image, new Dimension(24,24)));
+        setIcon(IconUtils.get(image, new Dimension(18,18)));
+
+        label.setBorder(new EmptyBorder(8,8,8,8));
 
         return label;
     }

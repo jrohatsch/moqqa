@@ -6,7 +6,6 @@ import com.github.jrohatsch.moqqa.data.SelectionObserver;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
 import com.github.jrohatsch.moqqa.ui.CopyButton;
 import com.github.jrohatsch.moqqa.ui.DeleteButton;
-import com.github.jrohatsch.moqqa.utils.ColorUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 import org.json.JSONObject;
 
@@ -19,7 +18,7 @@ import java.util.Objects;
 
 public class PathItemInfo implements SelectionObserver, PathObserver {
     private final Datahandler datahandler;
-    private final JLabel fullTopicText = new JLabel("Full Topic:");
+    private final JLabel fullTopicText = new JLabel("Topic:");
     private final JLabel fullTopic = new JLabel();
     private CopyButton topicCopyButton;
     private final JLabel children = new JLabel();
@@ -52,10 +51,10 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
             boolean nextIsTail = !keys.hasNext();
 
             builder.append(prefix)
-                    .append(nextIsTail ? "└── " : "├── ")
+                    .append(nextIsTail ? "\\-- " : "|-- ")
                     .append(key)
                     .append("\n");
-            generateTree(value, prefix + (nextIsTail ? "    " : "│   "), builder);
+            generateTree(value, prefix + (nextIsTail ? "    " : "|   "), builder);
         }
     }
 
@@ -204,10 +203,8 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
                 analyzeText.setVisible(true);
                 if (datahandler.isMonitored(fullTopic.getText())) {
                     trackValueButton.setText("Untrack value");
-                    trackValueButton.setBackground(Color.DARK_GRAY);
                 } else {
                     trackValueButton.setText("Track value");
-                    trackValueButton.setBackground(ColorUtils.BLUE);
                 }
                 trackValueButton.setVisible(true);
             });

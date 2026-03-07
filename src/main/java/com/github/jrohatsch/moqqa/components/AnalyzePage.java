@@ -1,7 +1,6 @@
 package com.github.jrohatsch.moqqa.components;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
-import com.github.jrohatsch.moqqa.utils.ColorUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 import com.github.jrohatsch.moqqa.utils.TimeUtils;
 
@@ -133,7 +132,6 @@ public class AnalyzePage {
 
     private JButton createExportButton() {
         var button = new JButton(TextUtils.getText("button.export"));
-        button.setBackground(ColorUtils.BLUE);
 
         button.addActionListener(action -> {
             stop();

@@ -1,5 +1,6 @@
 package com.github.jrohatsch.moqqa.ui;
 
+import com.github.jrohatsch.moqqa.utils.IconUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
@@ -8,7 +9,7 @@ import java.awt.*;
 public class SettingsButton extends JMenu {
 
     public SettingsButton(JComponent component) {
-        super("\u26ed");
+        setIcon(IconUtils.get("gear-solid-full.svg", new Dimension(16, 16)));
 
         var increaseSize = new JMenuItem(TextUtils.getText("label.fontSizePlus"));
         increaseSize.addActionListener(a -> {

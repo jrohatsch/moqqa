@@ -2,13 +2,13 @@ package com.github.jrohatsch.moqqa.ui;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.Message;
-import com.github.jrohatsch.moqqa.domain.PathListItem;
-import com.github.jrohatsch.moqqa.utils.ColorUtils;
 import com.github.jrohatsch.moqqa.utils.IconUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -28,7 +28,22 @@ public class DeleteButton extends JButton {
 
         setIcon(IconUtils.get("trash.svg", new Dimension(18,18)));
 
-        setBackground(ColorUtils.RED);
+        final Color defaultBackground = getBackground();
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                super.mouseEntered(e);
+
+                setBackground(Color.RED);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+                setBackground(defaultBackground);
+            }
+        });
+
 
         setToolTipText(TextUtils.getText("tooltip.deleteButton"));
 

@@ -79,7 +79,9 @@ public class MainPanel {
 
         pathItems.addListSelectionListener(e -> {
             var selectedItem = pathItems.getSelectedValue();
-            dataHandler.setSelectedItem(selectedItem);
+            if (selectedItem != null) {
+                dataHandler.setSelectedItem(selectedItem);
+            }
         });
 
         JTabbedPane tabbedPane = new JTabbedPane();

@@ -2,6 +2,8 @@ package com.github.jrohatsch.moqqa.components;
 
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.ui.SearchPathButton;
+import com.github.jrohatsch.moqqa.utils.IconUtils;
+import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,7 +17,7 @@ public class SearchPathUpdater {
     public SearchPathUpdater(Datahandler datahandler) {
         path = new JToolBar();
         this.datahandler = datahandler;
-        add(">");
+        add("", TextUtils.getText("tooltip.homeButton"), IconUtils.get("house-solid-full.svg", new Dimension(18, 18)));
     }
 
     public String getPath() {
@@ -54,14 +56,17 @@ public class SearchPathUpdater {
     }
 
     public void add(String subPath) {
-        add(subPath, null);
+        add(subPath, null, null);
     }
 
-    public void add(String subPath, String tooltipText) {
+    public void add(String subPath, String tooltipText, Icon icon) {
         if (path.getComponentCount() > 0) {
             path.addSeparator();
         }
         var button = new SearchPathButton(subPath);
+        if (icon != null) {
+            button.setIcon(icon);
+        }
 
         if (tooltipText != null) {
             button.setToolTipText(tooltipText);

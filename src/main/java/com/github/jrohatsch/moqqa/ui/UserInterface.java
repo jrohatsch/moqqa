@@ -1,6 +1,7 @@
 package com.github.jrohatsch.moqqa.ui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatLaf;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
@@ -8,6 +9,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
@@ -15,11 +20,11 @@ import java.util.logging.Logger;
 public class UserInterface {
     private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private final Datahandler dataHandler;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private JFrame frame;
     private ConnectionPanel connectionPanel;
     private MainPanel mainPanel;
     private PanelType activePanel;
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
@@ -27,13 +32,31 @@ public class UserInterface {
 
 
     public void show() {
+        // setup steps
+        Map<String, String> extra = new HashMap<>();
+        extra.put("@accentColor", "#38BDF8");      // Light Blue for highlighting elements
+        extra.put("@background", "#0F172A");       // Deep Navy as main Background
+        extra.put("@selectionBackground", "#334155"); // Slate Gray for selected items
+
+        FlatLaf.setGlobalExtraDefaults(extra);
         FlatDarculaLaf.setup();
+
+        GraphicsEnvironment ge =
+                GraphicsEnvironment.getLocalGraphicsEnvironment();
+        try {
+            InputStream fontStream = getClass().getResourceAsStream("/fonts/roboto.ttf");
+            Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+            ge.registerFont(font);
+            UIManager.put("defaultFont", font.deriveFont(14f));
+        } catch (FontFormatException | IOException e) {
+            LOGGER.warning("Could not load custom font, using default");
+        }
 
         frame = new JFrame();
 
         addConnectionPanel();
 
-        frame.setMinimumSize(new Dimension(400,400));
+        frame.setMinimumSize(new Dimension(400, 400));
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
