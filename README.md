@@ -4,13 +4,16 @@
 ### Create Sessions
 ![](https://github.com/jrohatsch/media_store/blob/master/moqqa/sessions.gif)
 
+### Browse MQTT Tree
+![](https://github.com/jrohatsch/media_store/blob/master/moqqa/browse.gif)
+
 ### Analyze Values
 ![](https://github.com/jrohatsch/media_store/blob/master/moqqa/analyze.gif)
 
 ### Publish Values
 ![](https://github.com/jrohatsch/media_store/blob/master/moqqa/publish.gif)
 
-### Filter & Browse MQTT Tree
+### Filter MQTT Tree
 ![](https://github.com/jrohatsch/media_store/blob/master/moqqa/filter.gif)
 
 
