@@ -20,18 +20,18 @@
 ## Run the App
 ### Linux 
 
-Download the latest linux AppImage --> [linux-app-image.zip](https://github.com/jrohatsch/moqqa/releases/download/v1.0.0/linux-app-image.zip)
+Download the latest linux AppImage --> [linux-app-image.zip](https://github.com/jrohatsch/moqqa/releases/download/v1.1.0/linux-app-image.zip)
 
 ### Windows 
 
-Download the latest windows installer --> [windows-app-installer.zip](https://github.com/jrohatsch/moqqa/releases/download/v1.0.0/windows-app-installer.zip)
+Download the latest windows installer --> [windows-app-installer.zip](https://github.com/jrohatsch/moqqa/releases/download/v1.1.0/windows-app-installer.zip)
 
 ### Platform independent
 
-Download the latest packed jar-Archive --> [packaged-jar.zip](https://github.com/jrohatsch/moqqa/releases/download/v1.0.0/packaged-jar.zip)
+Download the latest packed jar-Archive --> [packaged-jar.zip](https://github.com/jrohatsch/moqqa/releases/download/v1.1.0/packaged-jar.zip)
 
 and run it with
 
 ```bash
-java -jar moqqa-{version}.jar
+java -jar moqqa.jar
 ```
