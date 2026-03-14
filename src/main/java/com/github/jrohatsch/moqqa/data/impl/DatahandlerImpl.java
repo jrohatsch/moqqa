@@ -6,6 +6,7 @@ import com.github.jrohatsch.moqqa.data.PathObserver;
 import com.github.jrohatsch.moqqa.data.SelectionObserver;
 import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
+import org.eclipse.paho.client.mqttv3.MqttTopic;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -96,7 +97,7 @@ public class DatahandlerImpl implements Datahandler {
         if (selectedItem == null) {
             selectionObserver.forEach(SelectionObserver::clear);
         } else {
-            selectionObserver.forEach(o->o.update(selectedItem));
+            selectionObserver.forEach(o -> o.update(selectedItem));
         }
     }
 
@@ -172,14 +173,21 @@ public class DatahandlerImpl implements Datahandler {
 
     @Override
     public boolean monitorTopic(String topic) {
-        if (data.containsKey(topic)) {
-            var historicValues = new LinkedList<Message>();
-            historicValues.add(data.get(topic));
-            monitored.put(topic, historicValues);
-            return true;
-        } else {
+        if (topic == null || topic.isBlank() || topic.isEmpty()) {
             return false;
         }
+        var topicsToMonitor = data.keySet()
+                .stream()
+                .filter(eachTopic -> MqttTopic.isMatched(topic, eachTopic))
+                .toList();
+
+        topicsToMonitor.forEach(eachTopic -> {
+            var historicValues = new LinkedList<Message>();
+            historicValues.add(data.get(eachTopic));
+            monitored.put(eachTopic, historicValues);
+        });
+
+        return !topicsToMonitor.isEmpty();
     }
 
     @Override
@@ -204,6 +212,12 @@ public class DatahandlerImpl implements Datahandler {
     @Override
     public List<Message> getMessages(Predicate<Message> filter) {
         return data.values().stream().filter(filter).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isRetained(String topic) {
+        Message message = data.getOrDefault(topic, Message.of(topic, "", false));
+        return message.isRetained();
     }
 
 

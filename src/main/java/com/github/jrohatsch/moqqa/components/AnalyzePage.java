@@ -123,9 +123,23 @@ public class AnalyzePage {
 
         topBar.add(createExportButton());
 
+        var bottomBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        var customTrackInput = new JTextField(20);
+        bottomBar.add(customTrackInput);
+        var trackButton = new JButton("Track");
+        bottomBar.add(trackButton);
+        trackButton.addActionListener(a -> {
+            String topicToTrack = customTrackInput.getText();
+            if (!topicToTrack.isBlank()) {
+                datahandler.monitorTopic(topicToTrack);
+                customTrackInput.setText("");
+            }
+        });
+
         frame.add(topBar, BorderLayout.NORTH);
         frame.add(monitoredIDs, BorderLayout.WEST);
         frame.add(scroll, BorderLayout.CENTER);
+        frame.add(bottomBar, BorderLayout.SOUTH);
 
         return frame;
     }

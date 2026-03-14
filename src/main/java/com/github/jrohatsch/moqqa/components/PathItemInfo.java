@@ -1,5 +1,6 @@
 package com.github.jrohatsch.moqqa.components;
 
+import com.formdev.flatlaf.FlatLaf;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.PathObserver;
 import com.github.jrohatsch.moqqa.data.SelectionObserver;
@@ -38,6 +39,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     private JLabel valueTitle;
     private JScrollPane valueFieldScrollPane;
     private JButton valueCopyButton;
+    private JToolTip retained;
 
     public PathItemInfo(Datahandler dataHandler, JComponent toolTipParent) {
         this.datahandler = dataHandler;
@@ -148,6 +150,19 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         valueTitleBar.add(buildHorizontalSeparator());
         valueTitleBar.add(trackValueButton);
 
+        retained = valueTitleBar.createToolTip();
+        retained.setTipText("Retained");
+        // set the tooltip background color to the default selected color of the current look and feel
+        Color background = Color.decode(FlatLaf.getGlobalExtraDefaults().get("@selectionBackground"));
+        retained.setBackground(background);
+        Color foreground = Color.decode(FlatLaf.getGlobalExtraDefaults().get("@selectionForeground"));
+        retained.setForeground(foreground);
+
+
+        valueTitleBar.add(buildHorizontalSeparator());
+
+        valueTitleBar.add(retained);
+
         topicTreeTitle = createTitle("Topic tree:");
         topicTree = new JTextArea();
         topicTree.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -237,6 +252,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
     @Override
     public void clear() {
         placeHolder.setVisible(true);
+        retained.setVisible(false);
 
         setVisibleTopicComponents(false);
 
@@ -267,6 +283,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
         valueField.setText(valueText);
         adjustTextAreaHeight(valueField, valueFieldScrollPane);
         setVisibleValueComponents(true);
+        retained.setVisible(datahandler.isRetained(fullTopic.getText()));
     }
 
     private void handleValueMissing() {
@@ -275,7 +292,7 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
 
     public void show() {
         placeHolder.setVisible(false);
-
+        retained.setVisible(false);
 
         datahandler.getSelectedItem().ifPresent(item -> {
 

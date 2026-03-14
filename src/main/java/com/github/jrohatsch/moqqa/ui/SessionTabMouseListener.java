@@ -1,6 +1,7 @@
 package com.github.jrohatsch.moqqa.ui;
 
 import com.github.jrohatsch.moqqa.session.SessionHandler;
+import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
 import java.awt.event.MouseEvent;
@@ -19,17 +20,21 @@ public class SessionTabMouseListener implements MouseListener {
             var tabbedPane = (JTabbedPane) e.getSource();
             var index = tabbedPane.getSelectedIndex();
             var menu = new JPopupMenu("");
-            var closeTab = new JMenuItem("Close Tab");
+            var closeTab = new JMenuItem(TextUtils.getText("tab.close"));
             closeTab.addActionListener(a -> {
                 if (tabbedPane.getTabCount() > 2) {
-                    // move the index to left one, because if it switches to " + " tab
-                    // automatically a new tab is added
-                    tabbedPane.setSelectedIndex(index - 1);
+                    if (index == 0) {
+                        // if the first tab is selected move index to the next one
+                        tabbedPane.setSelectedIndex(1);
+                    } else {
+                        // generally move index to the previous one
+                        tabbedPane.setSelectedIndex(index - 1);
+                    }
                     sessionHandler.delete(tabbedPane.getTitleAt(index));
                     tabbedPane.removeTabAt(index);
                 }
             });
-            var closeOtherTabs = new JMenuItem("Close Other Tabs");
+            var closeOtherTabs = new JMenuItem(TextUtils.getText("tab.closeOther"));
             closeOtherTabs.addActionListener(a -> {
                 String tabToKeep = tabbedPane.getTitleAt(index);
                 int tabRemoveIndex = 0;
