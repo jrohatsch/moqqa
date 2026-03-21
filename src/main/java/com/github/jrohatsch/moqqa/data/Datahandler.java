@@ -37,4 +37,6 @@ public interface Datahandler {
     List<Message> getMessages(Predicate<Message> filter);
 
     boolean isRetained(String topic);
+
+    List<String> getMatchingTopicFilters(String topic);
 }

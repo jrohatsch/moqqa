@@ -69,12 +69,17 @@ public class AnalyzePage {
 
                         var popMenu = new JPopupMenu();
                         var untrackItem = new JMenuItem("Untrack topic");
+                        popMenu.add(untrackItem);
+                        untrackItem.addActionListener(a -> datahandler.forgetMonitoredValue(topic));
 
-                        untrackItem.addActionListener(a -> {
-                            datahandler.forgetMonitoredValue(topic);
+                        datahandler.getMatchingTopicFilters(topic).forEach(eachTopicFilter -> {
+                            var untrackMultiple = new JMenuItem("Untrack topic filter %s".formatted(eachTopicFilter));
+                            popMenu.add(untrackMultiple);
+                            untrackMultiple.addActionListener(a -> datahandler.forgetMonitoredValue(eachTopicFilter));
                         });
 
-                        popMenu.add(untrackItem);
+
+
                         popMenu.show(table, e.getX(), e.getY());
                     } catch (Exception ignored) {
 
