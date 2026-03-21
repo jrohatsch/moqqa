@@ -8,6 +8,7 @@ import java.awt.*;
 
 public class SettingsButton extends JMenu {
 
+
     public SettingsButton(JComponent component) {
         setIcon(IconUtils.get("gear-solid-full.svg", new Dimension(16, 16)));
 
@@ -21,6 +22,25 @@ public class SettingsButton extends JMenu {
             sizeFontRecursive(component, -5);
         });
         add(decreaseSize);
+
+        var scaleUIBar = new JPanel();
+        scaleUIBar.setLayout(new BoxLayout(scaleUIBar, BoxLayout.X_AXIS));
+        scaleUIBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        scaleUIBar.add(new JLabel("Scale: "));
+        scaleUIBar.add(new JCheckBox("Auto", true));
+        scaleUIBar.add(new JButton("100%"));
+        scaleUIBar.add(new JButton("150%"));
+        scaleUIBar.add(new JButton("150%"));
+        scaleUIBar.add(new JButton("200%"));
+        scaleUIBar.add(new JButton("250%"));
+
+        // TODO scale accordingly
+        //System.setProperty("sun.java2d.uiScale.enabled", "true");
+        //System.setProperty("sun.java2d.uiScale", "2");
+
+        add(scaleUIBar);
+
     }
 
     private void sizeFontRecursive(JComponent component, float delta) {

@@ -8,6 +8,8 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.FileWriter;
@@ -145,6 +147,19 @@ public class AnalyzePage {
         frame.add(monitoredIDs, BorderLayout.WEST);
         frame.add(scroll, BorderLayout.CENTER);
         frame.add(bottomBar, BorderLayout.SOUTH);
+
+        // pause updating, when the component is not visible, to save resources
+        frame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                start();
+            }
+
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                stop();
+            }
+        });
 
         return frame;
     }

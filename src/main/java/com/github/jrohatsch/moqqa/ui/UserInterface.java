@@ -48,6 +48,9 @@ public class UserInterface {
         FlatLaf.setGlobalExtraDefaults(extra);
 
         FlatLaf.setGlobalExtraDefaults(extra);
+
+
+
         FlatDarculaLaf.setup();
 
         GraphicsEnvironment ge =
