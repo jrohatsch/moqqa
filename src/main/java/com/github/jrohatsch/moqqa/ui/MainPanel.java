@@ -3,6 +3,7 @@ package com.github.jrohatsch.moqqa.ui;
 import com.github.jrohatsch.moqqa.components.*;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
+import com.github.jrohatsch.moqqa.session.AppConfigHandler;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
@@ -21,9 +22,11 @@ public class MainPanel {
     private PathItemInfo pathItemInfo;
     private JPanel panel;
     private ConnectionState connectionState;
+    private final AppConfigHandler appConfigHandler;
 
-    public MainPanel(Datahandler datahandler) {
+    public MainPanel(Datahandler datahandler, AppConfigHandler appConfigHandler) {
         this.dataHandler = datahandler;
+        this.appConfigHandler = appConfigHandler;
     }
 
     private void stepIntoSelection() {
@@ -110,7 +113,7 @@ public class MainPanel {
         panel.add(searchPathScroll, BorderLayout.NORTH);
 
         var bottomToolbar = new JMenuBar();
-        bottomToolbar.add(new SettingsButton(panel));
+        bottomToolbar.add(new SettingsButton(panel, appConfigHandler));
         connectionState = new ConnectionState(dataHandler.connector());
         bottomToolbar.add(connectionState);
 

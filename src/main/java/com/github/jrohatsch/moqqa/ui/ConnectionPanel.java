@@ -29,9 +29,9 @@ public class ConnectionPanel {
     private final Object connectionLock = new Object();
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    public ConnectionPanel(Datahandler datahandler) {
+    public ConnectionPanel(Datahandler datahandler, SessionHandler sessionHandler) {
         this.datahandler = datahandler;
-        this.sessionHandler = new JsonSessionHandler();
+        this.sessionHandler = sessionHandler;
     }
 
     private static void displayAuthInputs(String[] authChoices, JComboBox<String> authComboBox, JLabel userNameText, JTextField userNameInput, JLabel passwordText, JTextField passwordInput, JLabel serverCertificateText, JButton serverCertificateButton) {
