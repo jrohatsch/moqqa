@@ -4,7 +4,6 @@ import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
 import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.session.*;
-import com.github.jrohatsch.moqqa.session.impl.JsonSessionHandler;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
@@ -146,6 +145,12 @@ public class ConnectionPanel {
         serverCertificateButton.setVisible(false);
         panel.add(serverCertificateButton, gc);
 
+
+        gc.gridy = 10;
+        gc.gridx = 0;
+        var menuBar = new JMenuBar();
+        menuBar.add(new SettingsButton(panel, (AppConfigHandler) sessionHandler));
+        panel.add(menuBar, gc);
 
         // use loaded session auth values
         authComboBox.setSelectedItem(session.authentication().type.text);

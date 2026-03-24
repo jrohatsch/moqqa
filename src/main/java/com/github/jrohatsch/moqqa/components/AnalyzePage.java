@@ -5,6 +5,7 @@ import com.github.jrohatsch.moqqa.utils.TextUtils;
 import com.github.jrohatsch.moqqa.utils.TimeUtils;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -130,13 +131,17 @@ public class AnalyzePage {
 
         topBar.add(createExportButton());
 
-        var bottomBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        var customTrackInput = new JTextField(20);
-        bottomBar.add(customTrackInput);
+        var bottomBar = new JPanel(new BorderLayout(5, 5));
+        bottomBar.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+        var customTrackInput = new TextFieldWithDescription(TextUtils.getText("label.trackCustomTopic"));
+        bottomBar.add(customTrackInput.get(), BorderLayout.CENTER);
         var trackButton = new JButton("Track");
-        bottomBar.add(trackButton);
+
+
+        bottomBar.add(trackButton, BorderLayout.EAST);
         trackButton.addActionListener(a -> {
-            String topicToTrack = customTrackInput.getText();
+            String topicToTrack = (String) customTrackInput.getText();
             if (!topicToTrack.isBlank()) {
                 datahandler.monitorTopic(topicToTrack);
                 customTrackInput.setText("");

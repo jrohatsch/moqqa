@@ -5,6 +5,7 @@ import com.github.jrohatsch.moqqa.session.AppConfigHandler;
 import com.github.jrohatsch.moqqa.utils.AppRestarter;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class ScaleUIButton extends JButton {
     public ScaleUIButton(double scaleFactor, AppConfigHandler appConfigHandler) {

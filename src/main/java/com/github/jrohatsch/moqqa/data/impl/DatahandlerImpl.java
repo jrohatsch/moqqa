@@ -213,7 +213,7 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     private boolean shouldBeMonitored(String topic) {
-        return monitoredTopicFilter.stream().filter(eachTopicFilter -> MqttTopic.isMatched(eachTopicFilter, topic)).findAny().isPresent();
+        return monitoredTopicFilter.stream().anyMatch(eachTopicFilter -> MqttTopic.isMatched(eachTopicFilter, topic));
     }
 
     @Override
@@ -248,7 +248,7 @@ public class DatahandlerImpl implements Datahandler {
 
     @Override
     public List<String> getMatchingTopicFilters(String topic) {
-        return monitoredTopicFilter.stream().filter(eachTopicFilter -> MqttTopic.isMatched(eachTopicFilter, topic)).toList();
+        return monitoredTopicFilter.stream().filter(eachTopicFilter -> !eachTopicFilter.equals(topic) && MqttTopic.isMatched(eachTopicFilter, topic)).toList();
     }
 
 
