@@ -127,6 +127,8 @@ public class PathItemInfo implements SelectionObserver, PathObserver {
 
         panel.add(valueTitleBar);
 
+        panel.add(buildVerticalSeparator());
+
         valueField = new JTextArea();
         valueField.setAlignmentX(Component.LEFT_ALIGNMENT);
         valueField.setBorder(new EmptyBorder(10, 10, 10, 10));

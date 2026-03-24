@@ -1,6 +1,5 @@
 package com.github.jrohatsch.moqqa.ui;
 
-import com.github.jrohatsch.moqqa.session.AppConfig;
 import com.github.jrohatsch.moqqa.session.AppConfigHandler;
 import com.github.jrohatsch.moqqa.utils.IconUtils;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
@@ -24,8 +23,6 @@ public class SettingsButton extends JMenu {
             sizeFontRecursive(component, -5);
         });
         add(decreaseSize);
-
-        var appConfig = appConfigHandler.loadConfig();
 
         var scaleUIBar = new JPanel();
         scaleUIBar.setLayout(new BoxLayout(scaleUIBar, BoxLayout.X_AXIS));
