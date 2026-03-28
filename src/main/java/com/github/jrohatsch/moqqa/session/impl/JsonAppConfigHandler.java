@@ -11,16 +11,16 @@ import java.time.Instant;
 import java.util.*;
 import java.util.logging.Logger;
 
-public class JsonSessionHandler implements SessionHandler, AppConfigHandler {
+public class JsonAppConfigHandler implements AppConfigHandler {
     private final Path folderPath = Path.of(System.getProperty("user.home"), "moqqa");
     private final Path settingsFilePath = Path.of(System.getProperty("user.home"), "moqqa", "sessions.json");
     private final Path configFilePath = Path.of(System.getProperty("user.home"), "moqqa", "config.json");
     private final ObjectMapper mapper = new ObjectMapper();
     final List<Session> sessions = new ArrayList<>();
-    private final Logger LOGGER = Logger.getLogger(JsonSessionHandler.class.getName());
+    private final Logger LOGGER = Logger.getLogger(JsonAppConfigHandler.class.getName());
 
     @Override
-    public void save(Session session) {
+    public void saveSession(Session session) {
         sessions.removeIf(eachSession -> eachSession.name().equals(session.name()));
         sessions.add(session);
 
@@ -80,7 +80,7 @@ public class JsonSessionHandler implements SessionHandler, AppConfigHandler {
         return fallBackConfig;
     }
 
-    public List<Session> load() {
+    public List<Session> loadSession() {
         sessions.clear();
 
         if (Files.exists(settingsFilePath)) {
@@ -120,12 +120,12 @@ public class JsonSessionHandler implements SessionHandler, AppConfigHandler {
     }
 
     @Override
-    public Optional<Session> get(String sessionName) {
+    public Optional<Session> getSession(String sessionName) {
         return sessions.stream().filter(session -> session.name().equals(sessionName)).findFirst();
     }
 
     @Override
-    public void delete(String sessionName) {
+    public void deleteSession(String sessionName) {
         sessions.removeIf(session -> session.name().equals(sessionName));
         writeFile();
     }

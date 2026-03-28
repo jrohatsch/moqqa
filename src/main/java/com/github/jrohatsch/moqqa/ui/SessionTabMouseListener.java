@@ -1,6 +1,6 @@
 package com.github.jrohatsch.moqqa.ui;
 
-import com.github.jrohatsch.moqqa.session.SessionHandler;
+import com.github.jrohatsch.moqqa.session.AppConfigHandler;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
@@ -8,9 +8,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class SessionTabMouseListener implements MouseListener {
-    private final SessionHandler sessionHandler;
+    private final AppConfigHandler sessionHandler;
 
-    public SessionTabMouseListener(SessionHandler sessionHandler) {
+    public SessionTabMouseListener(AppConfigHandler sessionHandler) {
         this.sessionHandler = sessionHandler;
     }
 
@@ -30,7 +30,7 @@ public class SessionTabMouseListener implements MouseListener {
                         // generally move index to the previous one
                         tabbedPane.setSelectedIndex(index - 1);
                     }
-                    sessionHandler.delete(tabbedPane.getTitleAt(index));
+                    sessionHandler.deleteSession(tabbedPane.getTitleAt(index));
                     tabbedPane.removeTabAt(index);
                 }
             });
@@ -44,7 +44,7 @@ public class SessionTabMouseListener implements MouseListener {
                         // ignore this index step to next one
                         tabRemoveIndex++;
                     } else {
-                        sessionHandler.delete(tabbedPane.getTitleAt(tabRemoveIndex));
+                        sessionHandler.deleteSession(tabbedPane.getTitleAt(tabRemoveIndex));
                         tabbedPane.removeTabAt(tabRemoveIndex);
                         // do not increment index, as other tabs to close automatically shift
                     }
