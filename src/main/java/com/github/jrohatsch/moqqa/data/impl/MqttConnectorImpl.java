@@ -76,7 +76,7 @@ public class MqttConnectorImpl implements MqttConnector, MqttCallback {
 
     @Override
     public void messageArrived(String s, MqttMessage mqttMessage) {
-        messageConsumer.accept(Message.of(s, mqttMessage.toString()));
+        messageConsumer.accept(Message.of(s, mqttMessage.toString(), mqttMessage.isRetained()));
     }
 
     @Override

@@ -9,6 +9,8 @@ import java.util.Arrays;
 public class TimeUtils {
     private final String[] zoneIds;
     private ZoneId selectedZoneId;
+    private static final DateTimeFormatter FIXED_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS");
 
     public TimeUtils() {
         selectedZoneId = ZoneId.systemDefault();
@@ -28,7 +30,7 @@ public class TimeUtils {
     }
 
     public String format(LocalDateTime localDateTime) {
-        return localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        return localDateTime.format(FIXED_FORMATTER);
     }
 
     public String format(Instant instant) {

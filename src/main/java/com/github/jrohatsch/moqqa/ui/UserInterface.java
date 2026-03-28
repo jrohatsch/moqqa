@@ -3,6 +3,8 @@ package com.github.jrohatsch.moqqa.ui;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.github.jrohatsch.moqqa.data.Datahandler;
+import com.github.jrohatsch.moqqa.session.AppConfigHandler;
+import com.github.jrohatsch.moqqa.session.impl.JsonAppConfigHandler;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
@@ -25,6 +27,7 @@ public class UserInterface {
     private ConnectionPanel connectionPanel;
     private MainPanel mainPanel;
     private PanelType activePanel;
+    private final AppConfigHandler appConfigHandler = new JsonAppConfigHandler();
 
     public UserInterface(Datahandler dataHandler) {
         this.dataHandler = dataHandler;
@@ -48,6 +51,12 @@ public class UserInterface {
         FlatLaf.setGlobalExtraDefaults(extra);
 
         FlatLaf.setGlobalExtraDefaults(extra);
+
+        var appConfig = appConfigHandler.loadConfig();
+
+        System.setProperty("sun.java2d.uiScale.enabled", "true");
+        System.setProperty("sun.java2d.uiScale", String.valueOf(appConfig.scalingFactor()));
+
         FlatDarculaLaf.setup();
 
         GraphicsEnvironment ge =
@@ -101,7 +110,7 @@ public class UserInterface {
     }
 
     private void addConnectionPanel() {
-        connectionPanel = new ConnectionPanel(dataHandler);
+        connectionPanel = new ConnectionPanel(dataHandler, appConfigHandler);
         frame.add(connectionPanel.get());
         frame.setTitle("Moqqa: %s".formatted(TextUtils.getText("label.connectOptions")));
         activePanel = PanelType.CONNECTION;
@@ -109,7 +118,7 @@ public class UserInterface {
     }
 
     private void addMainPanel() {
-        mainPanel = new MainPanel(dataHandler);
+        mainPanel = new MainPanel(dataHandler, appConfigHandler);
         frame.add(mainPanel.get());
         frame.setTitle("Moqqa: %s".formatted(dataHandler.connector().getAddress()));
         activePanel = PanelType.MAIN;

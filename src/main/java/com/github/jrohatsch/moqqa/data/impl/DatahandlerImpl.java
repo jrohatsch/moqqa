@@ -6,6 +6,7 @@ import com.github.jrohatsch.moqqa.data.PathObserver;
 import com.github.jrohatsch.moqqa.data.SelectionObserver;
 import com.github.jrohatsch.moqqa.domain.Message;
 import com.github.jrohatsch.moqqa.domain.PathListItem;
+import org.eclipse.paho.client.mqttv3.MqttTopic;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,7 @@ public class DatahandlerImpl implements Datahandler {
     private final MqttConnector mqttConnector;
     private final ConcurrentHashMap<String, Message> data;
     private final ConcurrentHashMap<String, LinkedList<Message>> monitored;
+    private final Set<String> monitoredTopicFilter;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final ConcurrentLinkedQueue<Message> queue = new ConcurrentLinkedQueue<>();
     private final List<PathObserver> pathObservers = new ArrayList<>();
@@ -33,6 +35,7 @@ public class DatahandlerImpl implements Datahandler {
         this.mqttConnector = mqttConnector;
         this.data = new ConcurrentHashMap<>();
         this.monitored = new ConcurrentHashMap<>();
+        this.monitoredTopicFilter = ConcurrentHashMap.newKeySet();
 
         // for each new message create a new thread to quickly save message in the queue
         mqttConnector.setMessageConsumer(message -> executorService.submit(() -> queue.add(message)));
@@ -59,6 +62,10 @@ public class DatahandlerImpl implements Datahandler {
         }
 
         data.put(message.topic(), message);
+
+        if (shouldBeMonitored(message.topic())) {
+            addToMonitoredTopics(message.topic());
+        }
 
         if (monitored.containsKey(message.topic())) {
             monitored.get(message.topic()).add(message);
@@ -96,7 +103,7 @@ public class DatahandlerImpl implements Datahandler {
         if (selectedItem == null) {
             selectionObserver.forEach(SelectionObserver::clear);
         } else {
-            selectionObserver.forEach(o->o.update(selectedItem));
+            selectionObserver.forEach(o -> o.update(selectedItem));
         }
     }
 
@@ -106,8 +113,16 @@ public class DatahandlerImpl implements Datahandler {
     }
 
     @Override
-    public void forgetMonitoredValue(String topic) {
-        monitored.remove(topic);
+    public void forgetMonitoredValue(String topicFilter) {
+        monitoredTopicFilter.remove(topicFilter);
+        LOGGER.info("forget monitored topic filter " + topicFilter);
+
+        monitored.keySet().stream().forEach(eachMonitoredTopic -> {
+            if (MqttTopic.isMatched(topicFilter, eachMonitoredTopic)) {
+                LOGGER.info("forget monitored topic " + eachMonitoredTopic);
+                monitored.remove(eachMonitoredTopic);
+            }
+        });
     }
 
 
@@ -170,16 +185,35 @@ public class DatahandlerImpl implements Datahandler {
         return mqttConnector;
     }
 
+
     @Override
-    public boolean monitorTopic(String topic) {
-        if (data.containsKey(topic)) {
-            var historicValues = new LinkedList<Message>();
-            historicValues.add(data.get(topic));
-            monitored.put(topic, historicValues);
-            return true;
-        } else {
+    public boolean monitorTopic(String topicFilter) {
+        if (topicFilter == null || topicFilter.isBlank() || topicFilter.isEmpty()) {
             return false;
         }
+
+        monitoredTopicFilter.add(topicFilter);
+
+        var topicsToMonitor = data.keySet()
+                .stream()
+                .filter(eachTopic -> MqttTopic.isMatched(topicFilter, eachTopic))
+                .toList();
+
+        topicsToMonitor.forEach(eachTopic -> {
+            addToMonitoredTopics(eachTopic);
+        });
+
+        return !topicsToMonitor.isEmpty();
+    }
+
+    private void addToMonitoredTopics(String eachTopic) {
+        var historicValues = new LinkedList<Message>();
+        historicValues.add(data.get(eachTopic));
+        monitored.put(eachTopic, historicValues);
+    }
+
+    private boolean shouldBeMonitored(String topic) {
+        return monitoredTopicFilter.stream().anyMatch(eachTopicFilter -> MqttTopic.isMatched(eachTopicFilter, topic));
     }
 
     @Override
@@ -204,6 +238,17 @@ public class DatahandlerImpl implements Datahandler {
     @Override
     public List<Message> getMessages(Predicate<Message> filter) {
         return data.values().stream().filter(filter).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isRetained(String topic) {
+        Message message = data.getOrDefault(topic, Message.of(topic, "", false));
+        return message.isRetained();
+    }
+
+    @Override
+    public List<String> getMatchingTopicFilters(String topic) {
+        return monitoredTopicFilter.stream().filter(eachTopicFilter -> !eachTopicFilter.equals(topic) && MqttTopic.isMatched(eachTopicFilter, topic)).toList();
     }
 
 

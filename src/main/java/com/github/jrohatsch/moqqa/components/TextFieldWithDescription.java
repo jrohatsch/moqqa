@@ -13,7 +13,7 @@ public class TextFieldWithDescription {
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         panel.setBorder(new EmptyBorder(new Insets(5, 5, 5, 5)));
         JLabel label = new JLabel(description);
-        label.setBorder(new EmptyBorder(0,0,0,20));
+        label.setBorder(new EmptyBorder(new Insets(0, 0, 0, 5)));
         panel.add(label);
 
         textField = new JTextField();

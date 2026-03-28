@@ -38,7 +38,7 @@ class TestMqttConnector implements MqttConnector {
     }
 
     public void mockMessage(String topic, String value) {
-        messageConsumer.accept(Message.of(topic, value));
+        messageConsumer.accept(Message.of(topic, value, false));
     }
 
     @Override

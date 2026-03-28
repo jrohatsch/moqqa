@@ -5,9 +5,12 @@ import com.github.jrohatsch.moqqa.utils.TextUtils;
 import com.github.jrohatsch.moqqa.utils.TimeUtils;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.FileWriter;
@@ -69,12 +72,17 @@ public class AnalyzePage {
 
                         var popMenu = new JPopupMenu();
                         var untrackItem = new JMenuItem("Untrack topic");
+                        popMenu.add(untrackItem);
+                        untrackItem.addActionListener(a -> datahandler.forgetMonitoredValue(topic));
 
-                        untrackItem.addActionListener(a -> {
-                            datahandler.forgetMonitoredValue(topic);
+                        datahandler.getMatchingTopicFilters(topic).forEach(eachTopicFilter -> {
+                            var untrackMultiple = new JMenuItem("Untrack topic filter %s".formatted(eachTopicFilter));
+                            popMenu.add(untrackMultiple);
+                            untrackMultiple.addActionListener(a -> datahandler.forgetMonitoredValue(eachTopicFilter));
                         });
 
-                        popMenu.add(untrackItem);
+
+
                         popMenu.show(table, e.getX(), e.getY());
                     } catch (Exception ignored) {
 
@@ -123,9 +131,40 @@ public class AnalyzePage {
 
         topBar.add(createExportButton());
 
+        var bottomBar = new JPanel(new BorderLayout(5, 5));
+        bottomBar.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+        var customTrackInput = new TextFieldWithDescription(TextUtils.getText("label.trackCustomTopic"));
+        bottomBar.add(customTrackInput.get(), BorderLayout.CENTER);
+        var trackButton = new JButton("Track");
+
+
+        bottomBar.add(trackButton, BorderLayout.EAST);
+        trackButton.addActionListener(a -> {
+            String topicToTrack = (String) customTrackInput.getText();
+            if (!topicToTrack.isBlank()) {
+                datahandler.monitorTopic(topicToTrack);
+                customTrackInput.setText("");
+            }
+        });
+
         frame.add(topBar, BorderLayout.NORTH);
         frame.add(monitoredIDs, BorderLayout.WEST);
         frame.add(scroll, BorderLayout.CENTER);
+        frame.add(bottomBar, BorderLayout.SOUTH);
+
+        // pause updating, when the component is not visible, to save resources
+        frame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                start();
+            }
+
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                stop();
+            }
+        });
 
         return frame;
     }

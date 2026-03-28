@@ -4,7 +4,6 @@ import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.data.MqttServerCertificate;
 import com.github.jrohatsch.moqqa.data.MqttUsernamePassword;
 import com.github.jrohatsch.moqqa.session.*;
-import com.github.jrohatsch.moqqa.session.impl.JsonSessionHandler;
 import com.github.jrohatsch.moqqa.utils.TextUtils;
 
 import javax.swing.*;
@@ -23,15 +22,14 @@ public class ConnectionPanel {
     private final Logger LOGGER = Logger.getLogger(getClass().getSimpleName());
     private final Datahandler datahandler;
     private JTabbedPane tabbedPane;
-    private JPanel panel;
-    private final SessionHandler sessionHandler;
+    private final AppConfigHandler sessionHandler;
     private int addSessionCounter = 1;
     private final Object connectionLock = new Object();
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    public ConnectionPanel(Datahandler datahandler) {
+    public ConnectionPanel(Datahandler datahandler, AppConfigHandler sessionHandler) {
         this.datahandler = datahandler;
-        this.sessionHandler = new JsonSessionHandler();
+        this.sessionHandler = sessionHandler;
     }
 
     private static void displayAuthInputs(String[] authChoices, JComboBox<String> authComboBox, JLabel userNameText, JTextField userNameInput, JLabel passwordText, JTextField passwordInput, JLabel serverCertificateText, JButton serverCertificateButton) {
@@ -50,7 +48,10 @@ public class ConnectionPanel {
     }
 
     public JPanel getSessionPanel(String sessionName) {
-        panel = new JPanel();
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+
+        var panel = new JPanel();
         panel.setLayout(new GridBagLayout());
 
         var gc = new GridBagConstraints();
@@ -67,7 +68,7 @@ public class ConnectionPanel {
         panel.add(sessionNameTextField, gc);
 
         // load session
-        var session = sessionHandler.get(sessionName).orElse(Session.anonymous("New Session", "localhost:1883", Instant.EPOCH));
+        var session = sessionHandler.getSession(sessionName).orElse(Session.anonymous("New Session", "localhost:1883", Instant.EPOCH));
 
 
         gc.gridx = 0;
@@ -147,6 +148,12 @@ public class ConnectionPanel {
         panel.add(serverCertificateButton, gc);
 
 
+        gc.gridy = 10;
+        gc.gridx = 0;
+        var settingsMenuBar = new JMenuBar();
+        settingsMenuBar.add(new SettingsButton(panel, sessionHandler));
+        panel.add(settingsMenuBar, gc);
+
         // use loaded session auth values
         authComboBox.setSelectedItem(session.authentication().type.text);
         switch (session.authentication().type) {
@@ -176,12 +183,12 @@ public class ConnectionPanel {
         connectButton.addCallback(0, () -> {
 
             if (userNameInput.isVisible() && passwordInput.isVisible()) {
-                sessionHandler.save(Session.usernamePassword(sessionNameTextField.getText(), address.getText(), userNameInput.getText(), passwordInput.getText()));
+                sessionHandler.saveSession(Session.usernamePassword(sessionNameTextField.getText(), address.getText(), userNameInput.getText(), passwordInput.getText()));
             } else if (serverCertificateText.isVisible()) {
-                sessionHandler.save(Session.certPath(sessionNameTextField.getText(), address.getText(), serverCertificatePath.get()));
+                sessionHandler.saveSession(Session.certPath(sessionNameTextField.getText(), address.getText(), serverCertificatePath.get()));
             } else {
                 // save session details
-                sessionHandler.save(Session.anonymous(sessionNameTextField.getText(), address.getText(), Instant.now()));
+                sessionHandler.saveSession(Session.anonymous(sessionNameTextField.getText(), address.getText(), Instant.now()));
             }
 
             // check authentication
@@ -216,14 +223,17 @@ public class ConnectionPanel {
             executorService = Executors.newSingleThreadExecutor();
         });
 
-        return panel;
+        mainPanel.add(panel, BorderLayout.CENTER);
+        mainPanel.add(settingsMenuBar, BorderLayout.SOUTH);
+
+        return mainPanel;
     }
 
     private void updateTabs() {
         // clean up
         tabbedPane.removeAll();
 
-        var savedSessions = sessionHandler.load();
+        var savedSessions = sessionHandler.loadSession();
 
         if (savedSessions.isEmpty()) {
             tabbedPane.add("New Session", getSessionPanel("New Session"));

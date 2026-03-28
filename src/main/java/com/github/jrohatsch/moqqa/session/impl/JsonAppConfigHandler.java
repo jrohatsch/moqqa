@@ -1,8 +1,7 @@
 package com.github.jrohatsch.moqqa.session.impl;
 
-import com.github.jrohatsch.moqqa.session.AuthenticationType;
-import com.github.jrohatsch.moqqa.session.Session;
-import com.github.jrohatsch.moqqa.session.SessionHandler;
+import com.github.jrohatsch.moqqa.session.*;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -12,15 +11,16 @@ import java.time.Instant;
 import java.util.*;
 import java.util.logging.Logger;
 
-public class JsonSessionHandler implements SessionHandler {
+public class JsonAppConfigHandler implements AppConfigHandler {
     private final Path folderPath = Path.of(System.getProperty("user.home"), "moqqa");
     private final Path settingsFilePath = Path.of(System.getProperty("user.home"), "moqqa", "sessions.json");
+    private final Path configFilePath = Path.of(System.getProperty("user.home"), "moqqa", "config.json");
     private final ObjectMapper mapper = new ObjectMapper();
     final List<Session> sessions = new ArrayList<>();
-    private final Logger LOGGER = Logger.getLogger(JsonSessionHandler.class.getName());
+    private final Logger LOGGER = Logger.getLogger(JsonAppConfigHandler.class.getName());
 
     @Override
-    public void save(Session session) {
+    public void saveSession(Session session) {
         sessions.removeIf(eachSession -> eachSession.name().equals(session.name()));
         sessions.add(session);
 
@@ -53,7 +53,34 @@ public class JsonSessionHandler implements SessionHandler {
         }
     }
 
-    public List<Session> load() {
+    @Override
+    public void saveConfig(AppConfig appConfig) {
+        if (!Files.exists(folderPath)) {
+                try {
+                    Files.createDirectory(folderPath);
+                } catch (IOException e) {
+                    System.err.printf("could not create direcotry %s%n!",folderPath);
+                }
+            }
+            mapper.writeValue(configFilePath.toFile(), appConfig);
+    }
+
+    @Override
+    public AppConfig loadConfig() {
+        AppConfig fallBackConfig = new AppConfig( 1.0);
+        if (Files.exists(configFilePath)) {
+            try {
+                return mapper.readValue(configFilePath.toFile(), AppConfig.class);
+            } catch (JacksonException e) {
+                LOGGER.warning("could not read config file");
+            }
+        } else {
+            LOGGER.warning("config file does not exist");
+        }
+        return fallBackConfig;
+    }
+
+    public List<Session> loadSession() {
         sessions.clear();
 
         if (Files.exists(settingsFilePath)) {
@@ -93,12 +120,12 @@ public class JsonSessionHandler implements SessionHandler {
     }
 
     @Override
-    public Optional<Session> get(String sessionName) {
+    public Optional<Session> getSession(String sessionName) {
         return sessions.stream().filter(session -> session.name().equals(sessionName)).findFirst();
     }
 
     @Override
-    public void delete(String sessionName) {
+    public void deleteSession(String sessionName) {
         sessions.removeIf(session -> session.name().equals(sessionName));
         writeFile();
     }
