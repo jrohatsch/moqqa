@@ -2,6 +2,7 @@ package com.github.jrohatsch.moqqa.ui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.github.jrohatsch.moqqa.data.Datahandler;
 import com.github.jrohatsch.moqqa.session.AppConfigHandler;
 import com.github.jrohatsch.moqqa.session.impl.JsonAppConfigHandler;
@@ -35,20 +36,33 @@ public class UserInterface {
 
 
     public void show() {
-        // setup steps
+        // setup steps - Modern dark theme with warm accents
         Map<String, String> extra = new HashMap<>();
 
-        extra.put("@background", "#060A09");
-        extra.put("@componentBackground", "#0D1614");
-        extra.put("@canvas", "#060A09");
+        // Modern dark color palette
+        extra.put("@background", "#1a1a1a");           // Dark background
+        extra.put("@componentBackground", "#242424");  // Slightly lighter dark
+        extra.put("@canvas", "#1a1a1a");               // Canvas background
 
-        extra.put("@accentColor", "#10B981");
-        extra.put("@selectionBackground", "#132F2A");
-        extra.put("@selectionForeground", "#10B981");
+        // Text and accent colors - warm accents on dark
+        extra.put("@accentColor", "#c9b5a0");          // Warm beige accent
+        extra.put("@selectionBackground", "#3a3a3a");  // Dark selection
+        extra.put("@selectionForeground", "#e8e4dc");  // Light text
+        extra.put("@focusColor", "#8b7355");           // Warm brown focus ring
 
-        extra.put("@focusColor", "#059669");
-
-        FlatLaf.setGlobalExtraDefaults(extra);
+        // Modern styling
+        extra.put("@foreground", "#e8e4dc");           // Light text
+        extra.put("@textComponentForeground", "#e8e4dc");
+        extra.put("@borderColor", "#3a3a3a");          // Subtle dark border
+        extra.put("@componentBorder", "#3a3a3a");
+        extra.put("@buttonBackground", "#242424");
+        extra.put("@buttonFocusedBackground", "#2f2f2f");
+        extra.put("@buttonHoverBackground", "#2f2f2f");
+        
+        
+        // Smooth shadows and effects
+        extra.put("@Component.focusWidth", "2");       // Focus ring width
+        extra.put("@Component.innerFocusWidth", "1");
 
         FlatLaf.setGlobalExtraDefaults(extra);
 
